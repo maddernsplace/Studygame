@@ -8,6 +8,9 @@
   const year4TimesTables = window.YEAR4_TIMES_TABLES || [];
   const year3English = window.YEAR3_ENGLISH || {};
   const year3Grammar = window.YEAR3_GRAMMAR || {};
+  const year34Spelling = window.YEAR34_SPELLING || { worksheets: [] };
+  const year4TrickyWords = window.YEAR4_TRICKY_WORDS || { sheets: [] };
+  const year4ColumnMaths = window.YEAR4_COLUMN_MATHS || { questions: [] };
   const rewardSet = window.REWARD_SET?.items || [];
   const subjectKeys = ["maths", "english", "science", "technology"];
   const years = ["Preschool", "Reception", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6", "Year 7"];
@@ -39,6 +42,24 @@
       label: "Year 4 Times Tables",
       year: "Year 4",
       subject: "maths"
+    },
+    {
+      id: "year34-english-spelling",
+      label: "Year 3 and 4 Spelling Sheets",
+      year: "Year 3",
+      subject: "english"
+    },
+    {
+      id: "year4-english-tricky-words",
+      label: "Year 4 Tricky Words",
+      year: "Year 4",
+      subject: "english"
+    },
+    {
+      id: "year4-column-maths",
+      label: "Year 4 Column Maths",
+      year: "Year 4",
+      subject: "maths"
     }
   ];
 
@@ -48,6 +69,7 @@
   let adultUnlocked = false;
   let passwordRequest = null;
   let grammarQuizState = null;
+  let trickyWordsState = null;
   let rewardRevealState = null;
 
   window.addEventListener("school-cloud-ready", () => {
@@ -75,8 +97,18 @@
       return;
     }
 
+    if (location.hash.startsWith("#year34-spelling-practice/")) {
+      location.hash = "year34-spelling";
+      return;
+    }
+
     if (location.hash.startsWith("#english-grammar-test/")) {
       location.hash = "english-grammar";
+      return;
+    }
+
+    if (location.hash.startsWith("#tricky-words-sheet/")) {
+      location.hash = "tricky-words";
       return;
     }
 
@@ -95,6 +127,24 @@
     if (location.hash === "#english-grammar") {
       selectedYear = "Year 3";
       location.hash = "subject/english";
+      return;
+    }
+
+    if (location.hash === "#year34-spelling") {
+      selectedYear = getActiveProfile().year || "Year 4";
+      location.hash = "subject/english";
+      return;
+    }
+
+    if (location.hash === "#tricky-words") {
+      selectedYear = "Year 4";
+      location.hash = "subject/english";
+      return;
+    }
+
+    if (location.hash === "#column-maths") {
+      selectedYear = "Year 4";
+      location.hash = "subject/maths";
       return;
     }
 
@@ -158,6 +208,16 @@
       return;
     }
 
+    if (view === "year34-spelling") {
+      renderYear34SpellingMenu();
+      return;
+    }
+
+    if (view === "year34-spelling-practice") {
+      renderYear34SpellingPractice(Number(subject));
+      return;
+    }
+
     if (view === "english-grammar") {
       renderEnglishGrammarMenu();
       return;
@@ -168,6 +228,24 @@
         startEnglishGrammarTest(Number(subject));
       }
       renderEnglishGrammarQuiz();
+      return;
+    }
+
+    if (view === "tricky-words") {
+      renderTrickyWordsMenu();
+      return;
+    }
+
+    if (view === "tricky-words-sheet") {
+      if (!trickyWordsState || trickyWordsState.sheet !== Number(subject)) {
+        startTrickyWordsSheet(Number(subject));
+      }
+      renderTrickyWordsQuiz();
+      return;
+    }
+
+    if (view === "column-maths") {
+      renderColumnMathsPractice();
       return;
     }
 
@@ -261,11 +339,20 @@
           ${key === "english" && selectedYear === "Year 3" && hasWorksheetAccess("year3-english-spelling") ? `
             <button class="primary-action english-action" type="button" id="spellingButton">Spelling Fix-Ups</button>
           ` : ""}
+          ${key === "english" && (selectedYear === "Year 3" || selectedYear === "Year 4") && hasWorksheetAccess("year34-english-spelling") ? `
+            <button class="primary-action english-action" type="button" id="year34SpellingButton">Year 3 and 4 Spelling Sheets</button>
+          ` : ""}
           ${key === "english" && selectedYear === "Year 3" && hasWorksheetAccess("year3-english-grammar") ? `
             <button class="primary-action grammar-action" type="button" id="grammarButton">Grammar Challenges</button>
           ` : ""}
+          ${key === "english" && selectedYear === "Year 4" && hasWorksheetAccess("year4-english-tricky-words") ? `
+            <button class="primary-action grammar-action" type="button" id="trickyWordsButton">Tricky Words</button>
+          ` : ""}
           ${key === "maths" && selectedYear === "Year 4" && hasWorksheetAccess("year4-times-tables") ? `
             <button class="primary-action times-action" type="button" id="timesButton">Daily Times Tables</button>
+          ` : ""}
+          ${key === "maths" && selectedYear === "Year 4" && hasWorksheetAccess("year4-column-maths") ? `
+            <button class="primary-action times-action" type="button" id="columnMathsButton">Column Maths</button>
           ` : ""}
         </div>
       </section>
@@ -296,10 +383,31 @@
       });
     }
 
+    const year34SpellingButton = app.querySelector("#year34SpellingButton");
+    if (year34SpellingButton) {
+      year34SpellingButton.addEventListener("click", () => {
+        location.hash = "year34-spelling";
+      });
+    }
+
     const grammarButton = app.querySelector("#grammarButton");
     if (grammarButton) {
       grammarButton.addEventListener("click", () => {
         location.hash = "english-grammar";
+      });
+    }
+
+    const trickyWordsButton = app.querySelector("#trickyWordsButton");
+    if (trickyWordsButton) {
+      trickyWordsButton.addEventListener("click", () => {
+        location.hash = "tricky-words";
+      });
+    }
+
+    const columnMathsButton = app.querySelector("#columnMathsButton");
+    if (columnMathsButton) {
+      columnMathsButton.addEventListener("click", () => {
+        location.hash = "column-maths";
       });
     }
   }
@@ -345,6 +453,46 @@
     });
   }
 
+  function renderYear34SpellingMenu() {
+    pageTitle.textContent = "Year 3 and 4 Spelling";
+    backButton.classList.remove("hidden");
+    quizState = null;
+
+    app.innerHTML = `
+      <section class="panel times-menu">
+        <div class="times-heading">
+          <div>
+            <h2>${year34Spelling.title}</h2>
+            <p>${getActiveProfile().name} can work through extra spelling correction worksheets with typed answers.</p>
+          </div>
+          <span class="selected-badge">${year34Spelling.worksheets.length} worksheets</span>
+        </div>
+        <div class="booklet-list">
+          ${year34Spelling.worksheets.map((worksheet) => `
+            <article class="booklet-card">
+              <div>
+                <h3>Worksheet ${worksheet.worksheet}</h3>
+                <p>${worksheet.items.length} spelling fixes</p>
+              </div>
+              <div class="single-action-grid">
+                <button class="day-button ${getYear34SpellingRecord(worksheet.worksheet).completed ? "done" : ""}" type="button" data-year34-spelling-sheet="${worksheet.worksheet}">
+                  <span>Open Worksheet</span>
+                  <small>${year34SpellingStatusLabel(worksheet.worksheet)}</small>
+                </button>
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    `;
+
+    app.querySelectorAll("[data-year34-spelling-sheet]").forEach((button) => {
+      button.addEventListener("click", () => {
+        location.hash = `year34-spelling-practice/${button.dataset.year34SpellingSheet}`;
+      });
+    });
+  }
+
   function renderEnglishGrammarMenu() {
     pageTitle.textContent = "Year 3 Grammar";
     backButton.classList.remove("hidden");
@@ -382,6 +530,47 @@
     app.querySelectorAll("[data-grammar-test]").forEach((button) => {
       button.addEventListener("click", () => {
         location.hash = `english-grammar-test/${button.dataset.grammarTest}`;
+      });
+    });
+  }
+
+  function renderTrickyWordsMenu() {
+    pageTitle.textContent = "Tricky Words";
+    backButton.classList.remove("hidden");
+    quizState = null;
+    trickyWordsState = null;
+
+    app.innerHTML = `
+      <section class="panel times-menu">
+        <div class="times-heading">
+          <div>
+            <h2>${year4TrickyWords.title}</h2>
+            <p>${getActiveProfile().name} can choose the correct spelling from three options on each sheet.</p>
+          </div>
+          <span class="selected-badge">${year4TrickyWords.sheets.length} sheets</span>
+        </div>
+        <div class="booklet-list">
+          ${year4TrickyWords.sheets.map((sheet) => `
+            <article class="booklet-card">
+              <div>
+                <h3>Sheet ${sheet.sheet}</h3>
+                <p>${sheet.questions.length} word choices</p>
+              </div>
+              <div class="single-action-grid">
+                <button class="day-button ${getTrickyWordsRecord(sheet.sheet).completed ? "done" : ""}" type="button" data-tricky-sheet="${sheet.sheet}">
+                  <span>Open Sheet</span>
+                  <small>${trickyWordsStatusLabel(sheet.sheet)}</small>
+                </button>
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    `;
+
+    app.querySelectorAll("[data-tricky-sheet]").forEach((button) => {
+      button.addEventListener("click", () => {
+        location.hash = `tricky-words-sheet/${button.dataset.trickySheet}`;
       });
     });
   }
@@ -493,6 +682,113 @@
     }
   }
 
+  function startTrickyWordsSheet(sheetNumber) {
+    const sheet = year4TrickyWords.sheets.find((item) => item.sheet === sheetNumber);
+    if (!sheet) return;
+    trickyWordsState = {
+      sheet: sheetNumber,
+      index: 0,
+      score: 0,
+      answered: false,
+      questions: sheet.questions
+    };
+  }
+
+  function renderTrickyWordsQuiz() {
+    const question = trickyWordsState.questions[trickyWordsState.index];
+    pageTitle.textContent = `Tricky Words ${trickyWordsState.sheet}`;
+    backButton.classList.remove("hidden");
+
+    if (!question) {
+      renderTrickyWordsResult();
+      return;
+    }
+
+    app.innerHTML = `
+      <section class="panel quiz-card grammar-card">
+        <div class="quiz-topline">
+          <span>${getActiveProfile().name}</span>
+          <span>Word ${trickyWordsState.index + 1} of ${trickyWordsState.questions.length}</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width: ${(trickyWordsState.index / trickyWordsState.questions.length) * 100}%"></div>
+        </div>
+        <h2 class="question-text">${question.prompt}</h2>
+        <div class="answers-grid">
+          ${question.options.map((option, index) => `
+            <button class="answer-button" type="button" data-tricky-answer="${index}">${option}</button>
+          `).join("")}
+        </div>
+        <p class="feedback" id="trickyFeedback"></p>
+      </section>
+    `;
+
+    app.querySelectorAll("[data-tricky-answer]").forEach((button) => {
+      button.addEventListener("click", () => chooseTrickyWordsAnswer(Number(button.dataset.trickyAnswer)));
+    });
+  }
+
+  function chooseTrickyWordsAnswer(answerIndex) {
+    if (trickyWordsState.answered) return;
+    trickyWordsState.answered = true;
+    const question = trickyWordsState.questions[trickyWordsState.index];
+    const buttons = app.querySelectorAll("[data-tricky-answer]");
+    const feedback = app.querySelector("#trickyFeedback");
+    const isCorrect = answerIndex === question.answer;
+
+    buttons.forEach((button) => {
+      const optionIndex = Number(button.dataset.trickyAnswer);
+      button.disabled = true;
+      if (optionIndex === question.answer) button.classList.add("correct");
+      if (optionIndex === answerIndex && !isCorrect) button.classList.add("wrong");
+    });
+
+    if (isCorrect) {
+      trickyWordsState.score += 1;
+      feedback.textContent = encouragement[Math.floor(Math.random() * encouragement.length)];
+    } else {
+      feedback.textContent = "Good try!";
+    }
+
+    setTimeout(() => {
+      trickyWordsState.index += 1;
+      trickyWordsState.answered = false;
+      renderTrickyWordsQuiz();
+    }, 1100);
+  }
+
+  function renderTrickyWordsResult() {
+    const percent = Math.round((trickyWordsState.score / trickyWordsState.questions.length) * 100);
+    const rewards = saveTrickyWordsAttempt(trickyWordsState.sheet, percent);
+    updateTotalProgress();
+
+    app.innerHTML = `
+      <section class="panel quiz-card result-card">
+        <span class="selected-badge">Sheet ${trickyWordsState.sheet}</span>
+        <h2>${resultMessage(percent)}</h2>
+        <div class="result-score">${percent}%</div>
+        <p>You scored ${trickyWordsState.score} out of ${trickyWordsState.questions.length}.</p>
+        <div class="actions-row">
+          <button class="primary-action grammar-action" type="button" id="retryTricky">Try Again</button>
+          <button class="primary-action secondary-action" type="button" id="backTricky">Back to Sheets</button>
+        </div>
+      </section>
+    `;
+
+    app.querySelector("#retryTricky").addEventListener("click", () => {
+      startTrickyWordsSheet(trickyWordsState.sheet);
+      renderTrickyWordsQuiz();
+    });
+
+    app.querySelector("#backTricky").addEventListener("click", () => {
+      location.hash = "tricky-words";
+    });
+
+    if (rewards.length) {
+      showRewardReveal(rewards, "Tricky word reward unlocked!");
+    }
+  }
+
   function renderEnglishSpellingPractice(worksheetNumber) {
     const pack = year3English.spellingFixups;
     const worksheet = pack.worksheets.find((item) => item.worksheet === worksheetNumber);
@@ -530,6 +826,42 @@
     app.querySelector("#clearSpelling").addEventListener("click", () => renderEnglishSpellingPractice(worksheetNumber));
   }
 
+  function renderYear34SpellingPractice(worksheetNumber) {
+    const worksheet = year34Spelling.worksheets.find((item) => item.worksheet === worksheetNumber);
+    if (!worksheet) {
+      location.hash = "year34-spelling";
+      return;
+    }
+
+    pageTitle.textContent = `Spelling Worksheet ${worksheetNumber}`;
+    backButton.classList.remove("hidden");
+
+    app.innerHTML = `
+      <section class="panel times-practice">
+        <div class="quiz-topline">
+          <span>${getActiveProfile().name}</span>
+          <span>${year34SpellingAttemptLabel(worksheetNumber)}</span>
+        </div>
+        <div class="sentence-grid">
+          ${worksheet.items.map((item, index) => `
+            <label class="sentence-card" data-year34-sentence="${index}">
+              <span>${index + 1}. ${item.sentence}</span>
+              <input inputmode="text" type="text" aria-label="Spelling answer ${index + 1}" autocomplete="off">
+            </label>
+          `).join("")}
+        </div>
+        <p class="feedback" id="year34SpellingFeedback"></p>
+        <div class="actions-row">
+          <button class="primary-action english-action" type="button" id="checkYear34Spelling">Check Spellings</button>
+          <button class="primary-action secondary-action" type="button" id="clearYear34Spelling">Clear</button>
+        </div>
+      </section>
+    `;
+
+    app.querySelector("#checkYear34Spelling").addEventListener("click", () => checkYear34SpellingAnswers(worksheet));
+    app.querySelector("#clearYear34Spelling").addEventListener("click", () => renderYear34SpellingPractice(worksheetNumber));
+  }
+
   function checkEnglishSpellingAnswers(worksheet) {
     let correct = 0;
     const cards = app.querySelectorAll(".sentence-card");
@@ -552,6 +884,86 @@
 
     if (rewards.length) {
       showRewardReveal(rewards, "Spelling reward unlocked!");
+    }
+  }
+
+  function checkYear34SpellingAnswers(worksheet) {
+    let correct = 0;
+    const cards = app.querySelectorAll("[data-year34-sentence]");
+
+    worksheet.items.forEach((item, index) => {
+      const card = cards[index];
+      const input = card.querySelector("input");
+      const value = normalizeTypedAnswer(input.value);
+      const isCorrect = value !== "" && value === normalizeTypedAnswer(item.answer);
+      card.classList.toggle("correct", isCorrect);
+      card.classList.toggle("wrong", !isCorrect);
+      input.value = input.value.trim();
+      if (isCorrect) correct += 1;
+    });
+
+    const percent = Math.round((correct / worksheet.items.length) * 100);
+    const rewards = saveYear34SpellingAttempt(worksheet.worksheet, percent);
+    updateTotalProgress();
+    app.querySelector("#year34SpellingFeedback").textContent = `${resultMessage(percent)} You fixed ${correct} out of ${worksheet.items.length}. Attempt saved.`;
+
+    if (rewards.length) {
+      showRewardReveal(rewards, "Spelling reward unlocked!");
+    }
+  }
+
+  function renderColumnMathsPractice() {
+    pageTitle.textContent = "Column Maths";
+    backButton.classList.remove("hidden");
+
+    app.innerHTML = `
+      <section class="panel times-practice">
+        <div class="quiz-topline">
+          <span>${getActiveProfile().name}</span>
+          <span>${columnMathsAttemptLabel()}</span>
+        </div>
+        <div class="times-grid">
+          ${year4ColumnMaths.questions.map((question, index) => `
+            <label class="sum-card" data-column-sum="${index}">
+              <span>${question.label}. ${question.prompt} =</span>
+              <input inputmode="numeric" pattern="[0-9]*" type="text" aria-label="Answer ${question.label}">
+            </label>
+          `).join("")}
+        </div>
+        <p class="feedback" id="columnMathsFeedback"></p>
+        <div class="actions-row">
+          <button class="primary-action times-action" type="button" id="checkColumnMaths">Check Answers</button>
+          <button class="primary-action secondary-action" type="button" id="clearColumnMaths">Clear</button>
+        </div>
+      </section>
+    `;
+
+    app.querySelector("#checkColumnMaths").addEventListener("click", checkColumnMathsAnswers);
+    app.querySelector("#clearColumnMaths").addEventListener("click", renderColumnMathsPractice);
+  }
+
+  function checkColumnMathsAnswers() {
+    let correct = 0;
+    const cards = app.querySelectorAll("[data-column-sum]");
+
+    year4ColumnMaths.questions.forEach((question, index) => {
+      const card = cards[index];
+      const input = card.querySelector("input");
+      const value = Number(input.value.trim());
+      const isCorrect = input.value.trim() !== "" && value === question.answer;
+      card.classList.toggle("correct", isCorrect);
+      card.classList.toggle("wrong", !isCorrect);
+      input.value = input.value.trim();
+      if (isCorrect) correct += 1;
+    });
+
+    const percent = Math.round((correct / year4ColumnMaths.questions.length) * 100);
+    const rewards = saveColumnMathsAttempt(percent);
+    updateTotalProgress();
+    app.querySelector("#columnMathsFeedback").textContent = `${resultMessage(percent)} You got ${correct} out of ${year4ColumnMaths.questions.length}. Attempt saved.`;
+
+    if (rewards.length) {
+      showRewardReveal(rewards, "Maths reward unlocked!");
     }
   }
 
@@ -876,9 +1288,57 @@
     return awardRewardsForRecord(key, previous, percent);
   }
 
+  function saveYear34SpellingAttempt(worksheet, percent) {
+    const store = getProgressStore();
+    const key = `year34-spelling:${worksheet}`;
+    const previous = normalizeTimesRecord(store[key]);
+    store[key] = {
+      best: Math.max(previous.best, percent),
+      attempts: previous.attempts + 1,
+      completed: true,
+      lastScore: percent,
+      perfectRewarded: previous.perfectRewarded || percent === 100,
+      updatedAt: new Date().toISOString()
+    };
+    setProgressStore(store);
+    return awardRewardsForRecord(key, previous, percent);
+  }
+
   function saveEnglishGrammarAttempt(test, percent) {
     const store = getProgressStore();
     const key = `english-grammar:${test}`;
+    const previous = normalizeTimesRecord(store[key]);
+    store[key] = {
+      best: Math.max(previous.best, percent),
+      attempts: previous.attempts + 1,
+      completed: true,
+      lastScore: percent,
+      perfectRewarded: previous.perfectRewarded || percent === 100,
+      updatedAt: new Date().toISOString()
+    };
+    setProgressStore(store);
+    return awardRewardsForRecord(key, previous, percent);
+  }
+
+  function saveTrickyWordsAttempt(sheet, percent) {
+    const store = getProgressStore();
+    const key = `tricky-words:${sheet}`;
+    const previous = normalizeTimesRecord(store[key]);
+    store[key] = {
+      best: Math.max(previous.best, percent),
+      attempts: previous.attempts + 1,
+      completed: true,
+      lastScore: percent,
+      perfectRewarded: previous.perfectRewarded || percent === 100,
+      updatedAt: new Date().toISOString()
+    };
+    setProgressStore(store);
+    return awardRewardsForRecord(key, previous, percent);
+  }
+
+  function saveColumnMathsAttempt(percent) {
+    const store = getProgressStore();
+    const key = "column-maths:1";
     const previous = normalizeTimesRecord(store[key]);
     store[key] = {
       best: Math.max(previous.best, percent),
@@ -906,6 +1366,18 @@
 
   function getEnglishGrammarRecord(test) {
     return normalizeTimesRecord(getProgressStore()[`english-grammar:${test}`]);
+  }
+
+  function getYear34SpellingRecord(worksheet) {
+    return normalizeTimesRecord(getProgressStore()[`year34-spelling:${worksheet}`]);
+  }
+
+  function getTrickyWordsRecord(sheet) {
+    return normalizeTimesRecord(getProgressStore()[`tricky-words:${sheet}`]);
+  }
+
+  function getColumnMathsRecord() {
+    return normalizeTimesRecord(getProgressStore()["column-maths:1"]);
   }
 
   function normalizeTimesRecord(value) {
@@ -948,6 +1420,28 @@
     const record = getEnglishGrammarRecord(test);
     if (!record.completed) return "Not done";
     return `Done ${record.best}% - ${record.attempts} tries`;
+  }
+
+  function year34SpellingStatusLabel(worksheet) {
+    const record = getYear34SpellingRecord(worksheet);
+    if (!record.completed) return "Not done";
+    return `Done ${record.best}% - ${record.attempts} tries`;
+  }
+
+  function year34SpellingAttemptLabel(worksheet) {
+    const record = getYear34SpellingRecord(worksheet);
+    return `Best ${record.best}% - Attempts ${record.attempts}`;
+  }
+
+  function trickyWordsStatusLabel(sheet) {
+    const record = getTrickyWordsRecord(sheet);
+    if (!record.completed) return "Not done";
+    return `Done ${record.best}% - ${record.attempts} tries`;
+  }
+
+  function columnMathsAttemptLabel() {
+    const record = getColumnMathsRecord();
+    return `Best ${record.best}% - Attempts ${record.attempts}`;
   }
 
   function getYearProgress(subject, year) {
@@ -1196,13 +1690,14 @@
     const year = years.includes(profile?.year) ? profile.year : "Year 4";
     const packs = Array.isArray(profile?.worksheetPacks) ? profile.worksheetPacks : [];
     const defaultPacks = defaultWorksheetPacksForYear(year);
+    const mergedPacks = Array.from(new Set([...defaultPacks, ...packs]));
 
     return {
       id: profile?.id || createProfileId(profile?.name || "Student"),
       name: profile?.name || "Student",
       age: profile?.age || "",
       year,
-      worksheetPacks: packs.length ? packs : defaultPacks,
+      worksheetPacks: mergedPacks,
       progress: profile?.progress || {},
       rewards: normalizeRewardState(profile?.rewards)
     };
@@ -1217,8 +1712,8 @@
   }
 
   function defaultWorksheetPacksForYear(year) {
-    if (year === "Year 3") return ["year3-english-spelling", "year3-english-grammar"];
-    if (year === "Year 4") return ["year4-times-tables"];
+    if (year === "Year 3") return ["year3-english-spelling", "year3-english-grammar", "year34-english-spelling"];
+    if (year === "Year 4") return ["year4-times-tables", "year34-english-spelling", "year4-english-tricky-words", "year4-column-maths"];
     return [];
   }
 
@@ -1376,6 +1871,9 @@
               <option value="year4-times-tables">Year 4 Times Tables</option>
               <option value="year3-english-spelling">Year 3 Spelling Fix-Ups</option>
               <option value="year3-english-grammar">Year 3 Grammar Challenges</option>
+              <option value="year34-english-spelling">Year 3 and 4 Spelling Sheets</option>
+              <option value="year4-english-tricky-words">Year 4 Tricky Words</option>
+              <option value="year4-column-maths">Year 4 Column Maths</option>
             </select>
           </label>
           <label>
@@ -1547,6 +2045,15 @@
         } else if (packId === "year3-english-grammar") {
           delete store[`english-grammar:${booklet}`];
           feedback.textContent = `Grammar test ${booklet} reset for ${getActiveProfile().name}.`;
+        } else if (packId === "year34-english-spelling") {
+          delete store[`year34-spelling:${booklet}`];
+          feedback.textContent = `Worksheet ${booklet} reset for ${getActiveProfile().name}.`;
+        } else if (packId === "year4-english-tricky-words") {
+          delete store[`tricky-words:${booklet}`];
+          feedback.textContent = `Tricky word sheet ${booklet} reset for ${getActiveProfile().name}.`;
+        } else if (packId === "year4-column-maths") {
+          delete store["column-maths:1"];
+          feedback.textContent = `Column maths reset for ${getActiveProfile().name}.`;
         }
         setProgressStore(store);
       });
