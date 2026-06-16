@@ -959,12 +959,9 @@
           <span>${getActiveProfile().name}</span>
           <span>${columnMathsAttemptLabel()}</span>
         </div>
-        <div class="times-grid">
+        <div class="column-maths-grid">
           ${year4ColumnMaths.questions.map((question, index) => `
-            <label class="sum-card" data-column-sum="${index}">
-              <span>${question.label}. ${question.prompt} =</span>
-              <input inputmode="numeric" pattern="[0-9]*" type="text" aria-label="Answer ${question.label}">
-            </label>
+            ${columnMathsCard(question, index)}
           `).join("")}
         </div>
         <p class="feedback" id="columnMathsFeedback"></p>
@@ -977,6 +974,41 @@
 
     app.querySelector("#checkColumnMaths").addEventListener("click", checkColumnMathsAnswers);
     app.querySelector("#clearColumnMaths").addEventListener("click", renderColumnMathsPractice);
+  }
+
+  function columnMathsCard(question, index) {
+    const { top, bottom, operator } = splitColumnPrompt(question.prompt);
+    const width = Math.max(String(top).length, String(bottom).length + 1, String(question.answer).length, 4);
+
+    return `
+      <label class="column-card" data-column-sum="${index}">
+        <span class="column-label">${question.label}.</span>
+        <span class="sr-only">${question.prompt}</span>
+        <div class="column-work" style="--digits: ${width}">
+          <div class="column-line top">${padColumnValue(top, width)}</div>
+          <div class="column-line bottom">${operator}${padColumnValue(bottom, width - 1)}</div>
+          <div class="column-rule"></div>
+          <input class="column-answer" inputmode="numeric" pattern="[0-9]*" type="text" aria-label="Answer ${question.label}">
+        </div>
+      </label>
+    `;
+  }
+
+  function splitColumnPrompt(prompt) {
+    const match = String(prompt).match(/^\s*(\d+)\s*([+-])\s*(\d+)\s*$/);
+    if (!match) {
+      return { top: "", bottom: String(prompt), operator: "" };
+    }
+
+    return {
+      top: match[1],
+      operator: match[2],
+      bottom: match[3]
+    };
+  }
+
+  function padColumnValue(value, width) {
+    return String(value).padStart(width, " ");
   }
 
   function renderMathsWorkbookMenu() {
