@@ -7,6 +7,7 @@
   const subjects = window.SCHOOL_DATA || {};
   const year4TimesTables = window.YEAR4_TIMES_TABLES || [];
   const year3English = window.YEAR3_ENGLISH || {};
+  const year3Grammar = window.YEAR3_GRAMMAR || {};
   const subjectKeys = ["maths", "english", "science", "technology"];
   const years = ["Preschool", "Reception", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6", "Year 7"];
   const encouragement = ["Brilliant!", "Nice thinking!", "You nailed it!", "Super work!", "Brain power!"];
@@ -15,6 +16,12 @@
     {
       id: "year3-english-spelling",
       label: "Year 3 Spelling Fix-Ups",
+      year: "Year 3",
+      subject: "english"
+    },
+    {
+      id: "year3-english-grammar",
+      label: "Year 3 Grammar Challenges",
       year: "Year 3",
       subject: "english"
     },
@@ -31,6 +38,7 @@
   let cloudSaveTimer = null;
   let adultUnlocked = false;
   let passwordRequest = null;
+  let grammarQuizState = null;
 
   window.addEventListener("school-cloud-ready", () => {
     if (!location.hash) renderDashboard();
@@ -57,6 +65,11 @@
       return;
     }
 
+    if (location.hash.startsWith("#english-grammar-test/")) {
+      location.hash = "english-grammar";
+      return;
+    }
+
     if (location.hash === "#times") {
       selectedYear = "Year 4";
       location.hash = "subject/maths";
@@ -64,6 +77,12 @@
     }
 
     if (location.hash === "#english-spelling") {
+      selectedYear = "Year 3";
+      location.hash = "subject/english";
+      return;
+    }
+
+    if (location.hash === "#english-grammar") {
       selectedYear = "Year 3";
       location.hash = "subject/english";
       return;
@@ -121,6 +140,19 @@
 
     if (view === "english-spelling-practice") {
       renderEnglishSpellingPractice(Number(subject));
+      return;
+    }
+
+    if (view === "english-grammar") {
+      renderEnglishGrammarMenu();
+      return;
+    }
+
+    if (view === "english-grammar-test") {
+      if (!grammarQuizState || grammarQuizState.test !== Number(subject)) {
+        startEnglishGrammarTest(Number(subject));
+      }
+      renderEnglishGrammarQuiz();
       return;
     }
 
@@ -205,6 +237,9 @@
           ${key === "english" && selectedYear === "Year 3" && hasWorksheetAccess("year3-english-spelling") ? `
             <button class="primary-action english-action" type="button" id="spellingButton">Spelling Fix-Ups</button>
           ` : ""}
+          ${key === "english" && selectedYear === "Year 3" && hasWorksheetAccess("year3-english-grammar") ? `
+            <button class="primary-action grammar-action" type="button" id="grammarButton">Grammar Challenges</button>
+          ` : ""}
           ${key === "maths" && selectedYear === "Year 4" && hasWorksheetAccess("year4-times-tables") ? `
             <button class="primary-action times-action" type="button" id="timesButton">Daily Times Tables</button>
           ` : ""}
@@ -234,6 +269,13 @@
     if (spellingButton) {
       spellingButton.addEventListener("click", () => {
         location.hash = "english-spelling";
+      });
+    }
+
+    const grammarButton = app.querySelector("#grammarButton");
+    if (grammarButton) {
+      grammarButton.addEventListener("click", () => {
+        location.hash = "english-grammar";
       });
     }
   }
@@ -276,6 +318,150 @@
       button.addEventListener("click", () => {
         location.hash = `english-spelling-practice/${button.dataset.spellingSheet}`;
       });
+    });
+  }
+
+  function renderEnglishGrammarMenu() {
+    pageTitle.textContent = "Year 3 Grammar";
+    backButton.classList.remove("hidden");
+    quizState = null;
+    grammarQuizState = null;
+
+    app.innerHTML = `
+      <section class="panel times-menu">
+        <div class="times-heading">
+          <div>
+            <h2>${year3Grammar.title}</h2>
+            <p>${getActiveProfile().name} can work through short grammar and punctuation challenge tests.</p>
+          </div>
+          <span class="selected-badge">${year3Grammar.tests.length} tests</span>
+        </div>
+        <div class="booklet-list">
+          ${year3Grammar.tests.map((test) => `
+            <article class="booklet-card">
+              <div>
+                <h3>Test ${test.test}</h3>
+                <p>${test.questions.length} questions</p>
+              </div>
+              <div class="single-action-grid">
+                <button class="day-button ${getEnglishGrammarRecord(test.test).completed ? "done" : ""}" type="button" data-grammar-test="${test.test}">
+                  <span>Open Test</span>
+                  <small>${englishGrammarStatusLabel(test.test)}</small>
+                </button>
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    `;
+
+    app.querySelectorAll("[data-grammar-test]").forEach((button) => {
+      button.addEventListener("click", () => {
+        location.hash = `english-grammar-test/${button.dataset.grammarTest}`;
+      });
+    });
+  }
+
+  function startEnglishGrammarTest(testNumber) {
+    const test = year3Grammar.tests.find((item) => item.test === testNumber);
+    if (!test) return;
+    grammarQuizState = {
+      test: testNumber,
+      index: 0,
+      score: 0,
+      answered: false,
+      questions: test.questions
+    };
+  }
+
+  function renderEnglishGrammarQuiz() {
+    const question = grammarQuizState.questions[grammarQuizState.index];
+    pageTitle.textContent = `Grammar Test ${grammarQuizState.test}`;
+    backButton.classList.remove("hidden");
+
+    if (!question) {
+      renderEnglishGrammarResult();
+      return;
+    }
+
+    app.innerHTML = `
+      <section class="panel quiz-card grammar-card">
+        <div class="quiz-topline">
+          <span>${getActiveProfile().name}</span>
+          <span>Question ${grammarQuizState.index + 1} of ${grammarQuizState.questions.length}</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width: ${(grammarQuizState.index / grammarQuizState.questions.length) * 100}%"></div>
+        </div>
+        <h2 class="question-text">${question.prompt}</h2>
+        <div class="answers-grid">
+          ${question.options.map((option, index) => `
+            <button class="answer-button" type="button" data-grammar-answer="${index}">${option}</button>
+          `).join("")}
+        </div>
+        <p class="feedback" id="grammarFeedback"></p>
+      </section>
+    `;
+
+    app.querySelectorAll("[data-grammar-answer]").forEach((button) => {
+      button.addEventListener("click", () => chooseEnglishGrammarAnswer(Number(button.dataset.grammarAnswer)));
+    });
+  }
+
+  function chooseEnglishGrammarAnswer(answerIndex) {
+    if (grammarQuizState.answered) return;
+    grammarQuizState.answered = true;
+    const question = grammarQuizState.questions[grammarQuizState.index];
+    const buttons = app.querySelectorAll("[data-grammar-answer]");
+    const feedback = app.querySelector("#grammarFeedback");
+    const isCorrect = answerIndex === question.answer;
+
+    buttons.forEach((button) => {
+      const optionIndex = Number(button.dataset.grammarAnswer);
+      button.disabled = true;
+      if (optionIndex === question.answer) button.classList.add("correct");
+      if (optionIndex === answerIndex && !isCorrect) button.classList.add("wrong");
+    });
+
+    if (isCorrect) {
+      grammarQuizState.score += 1;
+      feedback.textContent = encouragement[Math.floor(Math.random() * encouragement.length)];
+    } else {
+      feedback.textContent = "Good try!";
+    }
+
+    setTimeout(() => {
+      grammarQuizState.index += 1;
+      grammarQuizState.answered = false;
+      renderEnglishGrammarQuiz();
+    }, 1100);
+  }
+
+  function renderEnglishGrammarResult() {
+    const percent = Math.round((grammarQuizState.score / grammarQuizState.questions.length) * 100);
+    saveEnglishGrammarAttempt(grammarQuizState.test, percent);
+    updateTotalProgress();
+
+    app.innerHTML = `
+      <section class="panel quiz-card result-card">
+        <span class="selected-badge">Test ${grammarQuizState.test}</span>
+        <h2>${resultMessage(percent)}</h2>
+        <div class="result-score">${percent}%</div>
+        <p>You scored ${grammarQuizState.score} out of ${grammarQuizState.questions.length}.</p>
+        <div class="actions-row">
+          <button class="primary-action grammar-action" type="button" id="retryGrammar">Try Again</button>
+          <button class="primary-action secondary-action" type="button" id="backGrammar">Back to Tests</button>
+        </div>
+      </section>
+    `;
+
+    app.querySelector("#retryGrammar").addEventListener("click", () => {
+      startEnglishGrammarTest(grammarQuizState.test);
+      renderEnglishGrammarQuiz();
+    });
+
+    app.querySelector("#backGrammar").addEventListener("click", () => {
+      location.hash = "english-grammar";
     });
   }
 
@@ -650,6 +836,20 @@
     setProgressStore(store);
   }
 
+  function saveEnglishGrammarAttempt(test, percent) {
+    const store = getProgressStore();
+    const key = `english-grammar:${test}`;
+    const previous = normalizeTimesRecord(store[key]);
+    store[key] = {
+      best: Math.max(previous.best, percent),
+      attempts: previous.attempts + 1,
+      completed: true,
+      lastScore: percent,
+      updatedAt: new Date().toISOString()
+    };
+    setProgressStore(store);
+  }
+
   function getTimesProgress(booklet, day) {
     return normalizeTimesRecord(getProgressStore()[`times:${booklet}:${day}`]).best;
   }
@@ -660,6 +860,10 @@
 
   function getEnglishSpellingRecord(worksheet) {
     return normalizeTimesRecord(getProgressStore()[`english-spelling:${worksheet}`]);
+  }
+
+  function getEnglishGrammarRecord(test) {
+    return normalizeTimesRecord(getProgressStore()[`english-grammar:${test}`]);
   }
 
   function normalizeTimesRecord(value) {
@@ -695,6 +899,12 @@
   function englishSpellingAttemptLabel(worksheet) {
     const record = getEnglishSpellingRecord(worksheet);
     return `Best ${record.best}% - Attempts ${record.attempts}`;
+  }
+
+  function englishGrammarStatusLabel(test) {
+    const record = getEnglishGrammarRecord(test);
+    if (!record.completed) return "Not done";
+    return `Done ${record.best}% - ${record.attempts} tries`;
   }
 
   function getYearProgress(subject, year) {
@@ -746,7 +956,7 @@
   }
 
   function defaultWorksheetPacksForYear(year) {
-    if (year === "Year 3") return ["year3-english-spelling"];
+    if (year === "Year 3") return ["year3-english-spelling", "year3-english-grammar"];
     if (year === "Year 4") return ["year4-times-tables"];
     return [];
   }
@@ -897,6 +1107,7 @@
             <select id="resetPack">
               <option value="year4-times-tables">Year 4 Times Tables</option>
               <option value="year3-english-spelling">Year 3 Spelling Fix-Ups</option>
+              <option value="year3-english-grammar">Year 3 Grammar Challenges</option>
             </select>
           </label>
           <label>
@@ -1012,7 +1223,7 @@
     const dayInput = app.querySelector("#resetDay");
 
     packSelect.addEventListener("change", () => {
-      if (packSelect.value === "year3-english-spelling") {
+      if (packSelect.value !== "year4-times-tables") {
         dayInput.disabled = true;
         dayInput.value = 1;
       } else {
@@ -1039,6 +1250,9 @@
         } else if (packId === "year3-english-spelling") {
           delete store[`english-spelling:${booklet}`];
           feedback.textContent = `Worksheet ${booklet} reset for ${getActiveProfile().name}.`;
+        } else if (packId === "year3-english-grammar") {
+          delete store[`english-grammar:${booklet}`];
+          feedback.textContent = `Grammar test ${booklet} reset for ${getActiveProfile().name}.`;
         }
         setProgressStore(store);
       });

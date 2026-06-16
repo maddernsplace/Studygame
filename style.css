@@ -380,6 +380,10 @@ h1 {
   background: #f9a8d4;
 }
 
+.grammar-action {
+  background: #fdba74;
+}
+
 .cloud-action {
   background: #93c5fd;
 }
@@ -629,6 +633,10 @@ h1 {
 
 .sentence-card.wrong {
   background: #fee2e2;
+}
+
+.grammar-card .answer-button.correct {
+  background: #fde68a;
 }
 
 .quiz-topline {
