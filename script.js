@@ -1853,7 +1853,6 @@
           <div class="reward-grid">
             ${rewards.map((reward) => `
               <article class="reward-card rarity-${reward.rarity}">
-                <img src="${reward.image}" alt="${escapeHtml(reward.name)}">
                 <div class="reward-copy">
                   <span class="rarity-badge rarity-${reward.rarity}">${rarityConfig[reward.rarity].label}</span>
                   <h3>${escapeHtml(reward.name)}</h3>
@@ -1890,7 +1889,6 @@
         <div class="reward-grid reveal-grid">
           ${rewardRevealState.rewards.map((reward) => `
             <article class="reward-card rarity-${reward.rarity}">
-              <img src="${reward.image}" alt="${escapeHtml(reward.name)}">
               <div class="reward-copy">
                 <span class="rarity-badge rarity-${reward.rarity}">${rarityConfig[reward.rarity].label}</span>
                 <h3>${escapeHtml(reward.name)}</h3>
