@@ -117,6 +117,36 @@ h1 {
   gap: 18px;
 }
 
+.student-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+  padding: 22px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 8px 8px 0 var(--ink);
+}
+
+.student-hero h2 {
+  margin: 10px 0 0;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  line-height: 1.05;
+}
+
+.adult-button {
+  min-width: 118px;
+  min-height: 58px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: #e5e7eb;
+  box-shadow: 5px 5px 0 var(--ink);
+  cursor: pointer;
+  font-weight: 900;
+}
+
 .profile-panel {
   display: grid;
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
@@ -163,7 +193,8 @@ h1 {
 }
 
 .profile-controls select,
-.profile-controls input {
+.profile-controls input,
+.worksheet-reset-grid input {
   width: 100%;
   min-height: 52px;
   padding: 8px 10px;
@@ -355,6 +386,31 @@ h1 {
   background: #fca5a5;
 }
 
+.adult-settings-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.adult-settings-panel p {
+  margin: 0;
+}
+
+.worksheet-reset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.worksheet-reset-grid label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-weight: 900;
+}
+
 .quiz-card {
   max-width: 820px;
   margin: 0 auto;
@@ -533,6 +589,7 @@ h1 {
 @media (max-width: 900px) {
   .dashboard-grid,
   .profile-panel,
+  .adult-settings-panel,
   .subject-layout {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -577,6 +634,8 @@ h1 {
   .dashboard-grid,
   .profile-panel,
   .profile-controls,
+  .adult-settings-panel,
+  .worksheet-reset-grid,
   .subject-layout,
   .answers-grid,
   .year-grid {
@@ -602,5 +661,13 @@ h1 {
 
   .sum-card {
     grid-template-columns: 1fr 78px;
+  }
+
+  .student-hero {
+    display: grid;
+  }
+
+  .adult-button {
+    width: 100%;
   }
 }

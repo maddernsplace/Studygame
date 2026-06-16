@@ -13,6 +13,7 @@
   let selectedYear = "Preschool";
   let quizState = null;
   let cloudSaveTimer = null;
+  let adultUnlocked = false;
 
   window.addEventListener("school-cloud-ready", () => {
     if (!location.hash) renderDashboard();
@@ -37,6 +38,11 @@
     if (location.hash === "#times") {
       selectedYear = "Year 4";
       location.hash = "subject/maths";
+      return;
+    }
+
+    if (location.hash === "#adult") {
+      location.hash = "";
       return;
     }
 
@@ -80,6 +86,11 @@
       return;
     }
 
+    if (view === "adult") {
+      openAdultArea();
+      return;
+    }
+
     location.hash = "";
   }
 
@@ -89,13 +100,15 @@
     quizState = null;
 
     app.innerHTML = `
-      ${profilePanel()}
+      ${studentHomePanel()}
       <section class="dashboard-grid">
         ${subjectKeys.map((key) => subjectCard(key)).join("")}
       </section>
     `;
 
-    wireProfilePanel();
+    app.querySelector("#adultButton").addEventListener("click", () => {
+      unlockAdultArea();
+    });
 
     app.querySelectorAll("[data-subject]").forEach((card) => {
       card.addEventListener("click", () => {
@@ -244,14 +257,12 @@
         <div class="actions-row">
           <button class="primary-action" type="button" id="checkTimes">Check Answers</button>
           <button class="primary-action secondary-action" type="button" id="clearTimes">Clear</button>
-          <button class="primary-action danger-action" type="button" id="resetTimes">Reset This Day</button>
         </div>
       </section>
     `;
 
     app.querySelector("#checkTimes").addEventListener("click", () => checkTimesAnswers(booklet, day));
     app.querySelector("#clearTimes").addEventListener("click", () => renderTimesPractice(bookletNumber, dayNumber));
-    app.querySelector("#resetTimes").addEventListener("click", () => resetTimesPractice(bookletNumber, dayNumber));
   }
 
   function checkTimesAnswers(booklet, day) {
@@ -277,19 +288,6 @@
     saveTimesAttempt(booklet.booklet, day.day, percent);
     updateTotalProgress();
     app.querySelector("#timesFeedback").textContent = `${resultMessage(percent)} You got ${correct} out of ${day.questions.length}. Attempt saved.`;
-  }
-
-  function resetTimesPractice(booklet, day) {
-    const password = window.prompt("Enter reset password");
-    if (password !== resetPassword) {
-      app.querySelector("#timesFeedback").textContent = "Reset locked.";
-      return;
-    }
-
-    const store = getProgressStore();
-    delete store[`times:${booklet}:${day}`];
-    setProgressStore(store);
-    renderTimesPractice(booklet, day);
   }
 
   function startQuiz(subject, year) {
@@ -534,6 +532,50 @@
     totalProgress.textContent = `${Math.round(total / slots)}%`;
   }
 
+  function studentHomePanel() {
+    const profile = getActiveProfile();
+    return `
+      <section class="student-hero">
+        <div>
+          <span class="profile-chip">Playing as ${escapeHtml(profile.name)}</span>
+          <h2>Choose Your Learning Quest</h2>
+        </div>
+        <button class="adult-button" type="button" id="adultButton">Adult</button>
+      </section>
+    `;
+  }
+
+  function openAdultArea() {
+    if (!adultUnlocked) {
+      unlockAdultArea();
+      return;
+    }
+
+    renderAdultArea();
+  }
+
+  function unlockAdultArea() {
+    const password = window.prompt("Adult password");
+    if (password !== resetPassword) return;
+    adultUnlocked = true;
+    location.hash = "adult";
+    renderAdultArea();
+  }
+
+  function renderAdultArea() {
+    pageTitle.textContent = "Adult";
+    backButton.classList.remove("hidden");
+    quizState = null;
+
+    app.innerHTML = `
+      ${profilePanel()}
+      ${adultWorksheetResetPanel()}
+    `;
+
+    wireProfilePanel();
+    wireAdultWorksheetReset();
+  }
+
   function profilePanel() {
     const state = getProfileState();
     const profiles = Object.values(state.profiles);
@@ -568,6 +610,29 @@
           <button class="primary-action cloud-action" type="button" id="cloudLoad" ${cloud.user ? "" : "disabled"}>Load from Cloud</button>
           <button class="primary-action cloud-action" type="button" id="cloudSave" ${cloud.user ? "" : "disabled"}>Save to Cloud</button>
         </div>
+      </section>
+    `;
+  }
+
+  function adultWorksheetResetPanel() {
+    return `
+      <section class="panel adult-settings-panel">
+        <div>
+          <h2>Worksheet Settings</h2>
+          <p>Reset a completed Year 4 times-table worksheet for the current student.</p>
+        </div>
+        <div class="worksheet-reset-grid">
+          <label>
+            <span>Booklet</span>
+            <input id="resetBooklet" inputmode="numeric" type="number" min="1" max="26" value="1">
+          </label>
+          <label>
+            <span>Day</span>
+            <input id="resetDay" inputmode="numeric" type="number" min="1" max="11" value="1">
+          </label>
+          <button class="primary-action danger-action" type="button" id="resetWorksheet">Reset Worksheet</button>
+        </div>
+        <p class="feedback" id="adultFeedback"></p>
       </section>
     `;
   }
@@ -625,6 +690,24 @@
     if (saveButton) {
       saveButton.addEventListener("click", saveCloudProgress);
     }
+  }
+
+  function wireAdultWorksheetReset() {
+    app.querySelector("#resetWorksheet").addEventListener("click", () => {
+      const booklet = Number(app.querySelector("#resetBooklet").value);
+      const day = Number(app.querySelector("#resetDay").value);
+      const feedback = app.querySelector("#adultFeedback");
+
+      if (!Number.isInteger(booklet) || !Number.isInteger(day) || booklet < 1 || day < 1) {
+        feedback.textContent = "Enter a valid booklet and day.";
+        return;
+      }
+
+      const store = getProgressStore();
+      delete store[`times:${booklet}:${day}`];
+      setProgressStore(store);
+      feedback.textContent = `Booklet ${booklet}, Day ${day} reset for ${getActiveProfile().name}.`;
+    });
   }
 
   function createProfileId(name) {
