@@ -136,6 +136,18 @@ h1 {
   line-height: 1.05;
 }
 
+.student-subline {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .adult-button {
   min-width: 118px;
   min-height: 58px;
@@ -687,6 +699,141 @@ h1 {
   font-weight: 900;
 }
 
+.rewards-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.reward-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 8px 12px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  font-weight: 900;
+}
+
+.reward-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.reward-card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.reward-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.reward-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.reward-copy h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.reward-copy p {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.rarity-badge {
+  display: inline-flex;
+  width: fit-content;
+  padding: 5px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.rarity-common {
+  background: #f8fafc;
+}
+
+.rarity-uncommon {
+  background: #dcfce7;
+}
+
+.rarity-rare {
+  background: #dbeafe;
+}
+
+.rarity-epic {
+  background: #f5d0fe;
+}
+
+.rarity-legendary {
+  background: #fde68a;
+}
+
+.reward-overlay {
+  overflow: auto;
+}
+
+.reward-dialog {
+  width: min(960px, 100%);
+}
+
+.reveal-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin: 18px 0 22px;
+}
+
+.empty-rewards {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  padding: 18px;
+  border: 3px dashed var(--ink);
+  border-radius: 8px;
+  text-align: center;
+  background: #fff;
+}
+
+.empty-rewards h3,
+.empty-rewards p {
+  margin: 0;
+}
+
+.reward-admin-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.reward-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .result-card {
   display: grid;
   gap: 16px;
@@ -720,6 +867,10 @@ h1 {
 
   .booklet-card {
     grid-template-columns: 1fr;
+  }
+
+  .reward-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .day-grid,
@@ -776,7 +927,8 @@ h1 {
   }
 
   .day-grid,
-  .times-grid {
+  .times-grid,
+  .reward-grid {
     grid-template-columns: 1fr;
   }
 
@@ -788,7 +940,8 @@ h1 {
     display: grid;
   }
 
-  .adult-button {
+  .adult-button,
+  .reward-admin-actions .primary-action {
     width: 100%;
   }
 }

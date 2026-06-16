@@ -8,10 +8,19 @@
   const year4TimesTables = window.YEAR4_TIMES_TABLES || [];
   const year3English = window.YEAR3_ENGLISH || {};
   const year3Grammar = window.YEAR3_GRAMMAR || {};
+  const rewardSet = window.REWARD_SET?.items || [];
   const subjectKeys = ["maths", "english", "science", "technology"];
   const years = ["Preschool", "Reception", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6", "Year 7"];
   const encouragement = ["Brilliant!", "Nice thinking!", "You nailed it!", "Super work!", "Brain power!"];
   const resetPassword = "1256";
+  const rarityOrder = ["common", "uncommon", "rare", "epic", "legendary"];
+  const rarityConfig = {
+    common: { label: "Common", chance: "60%" },
+    uncommon: { label: "Uncommon", chance: "22%" },
+    rare: { label: "Rare", chance: "12%" },
+    epic: { label: "Epic", chance: "5%" },
+    legendary: { label: "Legendary", chance: "1%" }
+  };
   const worksheetPacks = [
     {
       id: "year3-english-spelling",
@@ -39,6 +48,7 @@
   let adultUnlocked = false;
   let passwordRequest = null;
   let grammarQuizState = null;
+  let rewardRevealState = null;
 
   window.addEventListener("school-cloud-ready", () => {
     if (!location.hash) renderDashboard();
@@ -89,6 +99,11 @@
     }
 
     if (location.hash === "#adult") {
+      location.hash = "";
+      return;
+    }
+
+    if (location.hash === "#rewards") {
       location.hash = "";
       return;
     }
@@ -161,6 +176,11 @@
       return;
     }
 
+    if (view === "rewards") {
+      renderRewardsGallery();
+      return;
+    }
+
     location.hash = "";
   }
 
@@ -178,6 +198,10 @@
 
     app.querySelector("#adultButton").addEventListener("click", () => {
       unlockAdultArea();
+    });
+
+    app.querySelector("#collectionButton").addEventListener("click", () => {
+      location.hash = "rewards";
     });
 
     app.querySelectorAll("[data-subject]").forEach((card) => {
@@ -439,7 +463,7 @@
 
   function renderEnglishGrammarResult() {
     const percent = Math.round((grammarQuizState.score / grammarQuizState.questions.length) * 100);
-    saveEnglishGrammarAttempt(grammarQuizState.test, percent);
+    const rewards = saveEnglishGrammarAttempt(grammarQuizState.test, percent);
     updateTotalProgress();
 
     app.innerHTML = `
@@ -463,6 +487,10 @@
     app.querySelector("#backGrammar").addEventListener("click", () => {
       location.hash = "english-grammar";
     });
+
+    if (rewards.length) {
+      showRewardReveal(rewards, "New reward unlocked!");
+    }
   }
 
   function renderEnglishSpellingPractice(worksheetNumber) {
@@ -518,9 +546,13 @@
     });
 
     const percent = Math.round((correct / worksheet.items.length) * 100);
-    saveEnglishSpellingAttempt(worksheet.worksheet, percent);
+    const rewards = saveEnglishSpellingAttempt(worksheet.worksheet, percent);
     updateTotalProgress();
     app.querySelector("#spellingFeedback").textContent = `${resultMessage(percent)} You fixed ${correct} out of ${worksheet.items.length}. Attempt saved.`;
+
+    if (rewards.length) {
+      showRewardReveal(rewards, "Spelling reward unlocked!");
+    }
   }
 
   function renderTimesTableMenu() {
@@ -622,9 +654,13 @@
     });
 
     const percent = Math.round((correct / day.questions.length) * 100);
-    saveTimesAttempt(booklet.booklet, day.day, percent);
+    const rewards = saveTimesAttempt(booklet.booklet, day.day, percent);
     updateTotalProgress();
     app.querySelector("#timesFeedback").textContent = `${resultMessage(percent)} You got ${correct} out of ${day.questions.length}. Attempt saved.`;
+
+    if (rewards.length) {
+      showRewardReveal(rewards, "Times-table reward unlocked!");
+    }
   }
 
   function startQuiz(subject, year) {
@@ -817,9 +853,11 @@
       attempts: previous.attempts + 1,
       completed: true,
       lastScore: percent,
+      perfectRewarded: previous.perfectRewarded || percent === 100,
       updatedAt: new Date().toISOString()
     };
     setProgressStore(store);
+    return awardRewardsForRecord(key, previous, percent);
   }
 
   function saveEnglishSpellingAttempt(worksheet, percent) {
@@ -831,9 +869,11 @@
       attempts: previous.attempts + 1,
       completed: true,
       lastScore: percent,
+      perfectRewarded: previous.perfectRewarded || percent === 100,
       updatedAt: new Date().toISOString()
     };
     setProgressStore(store);
+    return awardRewardsForRecord(key, previous, percent);
   }
 
   function saveEnglishGrammarAttempt(test, percent) {
@@ -845,9 +885,11 @@
       attempts: previous.attempts + 1,
       completed: true,
       lastScore: percent,
+      perfectRewarded: previous.perfectRewarded || percent === 100,
       updatedAt: new Date().toISOString()
     };
     setProgressStore(store);
+    return awardRewardsForRecord(key, previous, percent);
   }
 
   function getTimesProgress(booklet, day) {
@@ -868,14 +910,15 @@
 
   function normalizeTimesRecord(value) {
     if (typeof value === "number") {
-      return { best: value, attempts: value > 0 ? 1 : 0, completed: value > 0, lastScore: value };
+      return { best: value, attempts: value > 0 ? 1 : 0, completed: value > 0, lastScore: value, perfectRewarded: value === 100 };
     }
 
     return {
       best: Number(value?.best) || 0,
       attempts: Number(value?.attempts) || 0,
       completed: Boolean(value?.completed),
-      lastScore: Number(value?.lastScore) || 0
+      lastScore: Number(value?.lastScore) || 0,
+      perfectRewarded: Boolean(value?.perfectRewarded)
     };
   }
 
@@ -932,6 +975,223 @@
     totalProgress.textContent = `${Math.round(total / slots)}%`;
   }
 
+  function awardRewardsForRecord(activityKey, previousRecord, percent) {
+    const rewards = [];
+    if (!previousRecord.completed) {
+      rewards.push(...unlockRandomRewards(1, activityKey, "completed"));
+    }
+    if (percent === 100 && !previousRecord.perfectRewarded) {
+      rewards.push(...unlockRandomRewards(1, activityKey, "perfect"));
+    }
+    return rewards;
+  }
+
+  function unlockRandomRewards(count, activityKey, reason) {
+    if (!rewardSet.length) return [];
+
+    const state = getProfileState();
+    const profile = normalizeProfile(state.profiles[state.activeId]);
+    const rewards = normalizeRewardState(profile.rewards);
+    const unlocked = [];
+    const now = new Date().toISOString();
+    const pool = rewardSet.filter((item) => !rewards.inventory.some((entry) => entry.id === item.id));
+
+    for (let index = 0; index < count; index += 1) {
+      const reward = pickRewardByRarity(pool);
+      if (!reward) break;
+      unlocked.push(reward);
+      rewards.inventory.push({
+        id: reward.id,
+        rarity: reward.rarity,
+        name: reward.name,
+        image: reward.image,
+        unlockedAt: now,
+        activityKey,
+        reason
+      });
+      rewards.claimedActivities[`${activityKey}:${reason}`] = true;
+      rewards.totalRolls += 1;
+
+      const rewardIndex = pool.findIndex((item) => item.id === reward.id);
+      if (rewardIndex >= 0) pool.splice(rewardIndex, 1);
+    }
+
+    if (unlocked.length) {
+      rewards.lastUnlockedAt = now;
+      profile.rewards = rewards;
+      state.profiles[state.activeId] = normalizeProfile(profile);
+      saveProfileState(state);
+    }
+
+    return unlocked;
+  }
+
+  function pickRewardByRarity(pool) {
+    if (!pool.length) return null;
+
+    const weighted = [
+      { rarity: "legendary", weight: 1 },
+      { rarity: "epic", weight: 5 },
+      { rarity: "rare", weight: 12 },
+      { rarity: "uncommon", weight: 22 },
+      { rarity: "common", weight: 60 }
+    ];
+
+    const available = weighted.filter((entry) => pool.some((item) => item.rarity === entry.rarity));
+    const totalWeight = available.reduce((sum, entry) => sum + entry.weight, 0);
+    let roll = Math.random() * totalWeight;
+
+    for (const entry of available) {
+      roll -= entry.weight;
+      if (roll <= 0) {
+        const matches = pool.filter((item) => item.rarity === entry.rarity);
+        return matches[Math.floor(Math.random() * matches.length)];
+      }
+    }
+
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function normalizeRewardState(rewards) {
+    return {
+      inventory: Array.isArray(rewards?.inventory)
+        ? rewards.inventory.filter((entry) => rewardSet.some((item) => item.id === entry.id)).map((entry) => ({
+            id: entry.id,
+            rarity: entry.rarity || getRewardById(entry.id)?.rarity || "common",
+            name: entry.name || getRewardById(entry.id)?.name || entry.id,
+            image: entry.image || getRewardById(entry.id)?.image || "",
+            unlockedAt: entry.unlockedAt || ""
+          }))
+        : [],
+      claimedActivities: rewards?.claimedActivities || {},
+      totalRolls: Number(rewards?.totalRolls) || 0,
+      lastUnlockedAt: rewards?.lastUnlockedAt || ""
+    };
+  }
+
+  function getRewardById(id) {
+    return rewardSet.find((item) => item.id === id) || null;
+  }
+
+  function getRewardSummary() {
+    const inventory = normalizeRewardState(getActiveProfile().rewards).inventory;
+    const byRarity = rarityOrder.reduce((summary, rarity) => {
+      summary[rarity] = inventory.filter((entry) => entry.rarity === rarity).length;
+      return summary;
+    }, {});
+
+    return {
+      total: rewardSet.length,
+      unlocked: inventory.length,
+      locked: Math.max(rewardSet.length - inventory.length, 0),
+      byRarity
+    };
+  }
+
+  function renderRewardsGallery() {
+    const profile = getActiveProfile();
+    const rewards = normalizeRewardState(profile.rewards).inventory
+      .sort((left, right) => new Date(right.unlockedAt || 0) - new Date(left.unlockedAt || 0));
+    const summary = getRewardSummary();
+
+    pageTitle.textContent = "Collection";
+    backButton.classList.remove("hidden");
+    quizState = null;
+    grammarQuizState = null;
+
+    app.innerHTML = `
+      <section class="panel rewards-panel">
+        <div class="times-heading">
+          <div>
+            <span class="profile-chip">${escapeHtml(profile.name)}'s rewards</span>
+            <h2>Quest Collection</h2>
+            <p>Complete worksheets to unlock surprise cards. Perfect scores can unlock bonus cards too.</p>
+          </div>
+          <span class="selected-badge">${summary.unlocked} / ${summary.total}</span>
+        </div>
+        <div class="reward-stats">
+          ${rarityOrder.map((rarity) => `
+            <div class="stat-pill rarity-${rarity}">
+              <strong>${rarityConfig[rarity].label}</strong>
+              <span>${summary.byRarity[rarity] || 0}</span>
+            </div>
+          `).join("")}
+        </div>
+        ${rewards.length ? `
+          <div class="reward-grid">
+            ${rewards.map((reward) => `
+              <article class="reward-card rarity-${reward.rarity}">
+                <img src="${reward.image}" alt="${escapeHtml(reward.name)}">
+                <div class="reward-copy">
+                  <span class="rarity-badge rarity-${reward.rarity}">${rarityConfig[reward.rarity].label}</span>
+                  <h3>${escapeHtml(reward.name)}</h3>
+                </div>
+              </article>
+            `).join("")}
+          </div>
+        ` : `
+          <div class="empty-rewards">
+            <h3>No rewards yet</h3>
+            <p>Finish a worksheet and the collection will start filling up.</p>
+          </div>
+        `}
+      </section>
+    `;
+  }
+
+  function showRewardReveal(rewards, title) {
+    rewardRevealState = { rewards, title };
+    renderRewardOverlay();
+  }
+
+  function renderRewardOverlay() {
+    removeRewardOverlay();
+    if (!rewardRevealState) return;
+
+    const overlay = document.createElement("div");
+    overlay.id = "rewardOverlay";
+    overlay.className = "password-overlay reward-overlay";
+    overlay.innerHTML = `
+      <div class="password-dialog reward-dialog">
+        <h2>${escapeHtml(rewardRevealState.title)}</h2>
+        <p>${rewardRevealState.rewards.length > 1 ? "A double reward drop!" : "A new card has joined the collection."}</p>
+        <div class="reward-grid reveal-grid">
+          ${rewardRevealState.rewards.map((reward) => `
+            <article class="reward-card rarity-${reward.rarity}">
+              <img src="${reward.image}" alt="${escapeHtml(reward.name)}">
+              <div class="reward-copy">
+                <span class="rarity-badge rarity-${reward.rarity}">${rarityConfig[reward.rarity].label}</span>
+                <h3>${escapeHtml(reward.name)}</h3>
+                <p>${rarityConfig[reward.rarity].chance} drop chance</p>
+              </div>
+            </article>
+          `).join("")}
+        </div>
+        <div class="actions-row">
+          <button class="primary-action" type="button" id="rewardCollection">Open Collection</button>
+          <button class="primary-action secondary-action" type="button" id="rewardClose">Keep Learning</button>
+        </div>
+      </div>
+    `;
+    body.appendChild(overlay);
+
+    overlay.querySelector("#rewardCollection").addEventListener("click", () => {
+      clearRewardReveal();
+      location.hash = "rewards";
+    });
+    overlay.querySelector("#rewardClose").addEventListener("click", clearRewardReveal);
+  }
+
+  function clearRewardReveal() {
+    rewardRevealState = null;
+    removeRewardOverlay();
+  }
+
+  function removeRewardOverlay() {
+    const overlay = document.querySelector("#rewardOverlay");
+    if (overlay) overlay.remove();
+  }
+
   function normalizeProfile(profile) {
     const year = years.includes(profile?.year) ? profile.year : "Year 4";
     const packs = Array.isArray(profile?.worksheetPacks) ? profile.worksheetPacks : [];
@@ -943,7 +1203,8 @@
       age: profile?.age || "",
       year,
       worksheetPacks: packs.length ? packs : defaultPacks,
-      progress: profile?.progress || {}
+      progress: profile?.progress || {},
+      rewards: normalizeRewardState(profile?.rewards)
     };
   }
 
@@ -963,13 +1224,18 @@
 
   function studentHomePanel() {
     const profile = getActiveProfile();
+    const rewardSummary = getRewardSummary();
     return `
       <section class="student-hero">
         <div>
           <span class="profile-chip">Playing as ${escapeHtml(profile.name)} - ${escapeHtml(profile.year)}</span>
           <h2>Choose Your Learning Quest</h2>
+          <p class="student-subline">${rewardSummary.unlocked} reward cards collected so far.</p>
         </div>
-        <button class="adult-button" type="button" id="adultButton">Adult</button>
+        <div class="hero-actions">
+          <button class="adult-button collection-button" type="button" id="collectionButton">Collection</button>
+          <button class="adult-button" type="button" id="adultButton">Adult</button>
+        </div>
       </section>
     `;
   }
@@ -1000,11 +1266,13 @@
       ${profilePanel()}
       ${studentLearningPanel()}
       ${adultWorksheetResetPanel()}
+      ${adultRewardsPanel()}
     `;
 
     wireProfilePanel();
     wireStudentLearningPanel();
     wireAdultWorksheetReset();
+    wireAdultRewardsPanel();
   }
 
   function profilePanel() {
@@ -1099,7 +1367,7 @@
       <section class="panel adult-settings-panel">
         <div>
           <h2>Worksheet Settings</h2>
-          <p>Reset a completed Year 4 times-table worksheet for the current student.</p>
+          <p>Reset a saved worksheet or test for the current student without touching the rest of their progress.</p>
         </div>
         <div class="worksheet-reset-grid">
           <label>
@@ -1121,6 +1389,31 @@
           <button class="primary-action danger-action" type="button" id="resetWorksheet">Reset Worksheet</button>
         </div>
         <p class="feedback" id="adultFeedback"></p>
+      </section>
+    `;
+  }
+
+  function adultRewardsPanel() {
+    const summary = getRewardSummary();
+    return `
+      <section class="panel adult-settings-panel">
+        <div>
+          <h2>Reward Collection</h2>
+          <p>Each completed worksheet can unlock random reward cards, with some much harder to find.</p>
+        </div>
+        <div class="reward-admin-grid">
+          <div class="reward-stats">
+            <div class="stat-pill">Collected ${summary.unlocked} / ${summary.total}</div>
+            ${rarityOrder.map((rarity) => `
+              <div class="stat-pill rarity-${rarity}">${rarityConfig[rarity].label}: ${summary.byRarity[rarity] || 0}</div>
+            `).join("")}
+          </div>
+          <div class="reward-admin-actions">
+            <button class="primary-action secondary-action" type="button" id="viewRewardsFromAdult">View Collection</button>
+            <button class="primary-action danger-action" type="button" id="resetRewards">Reset Rewards</button>
+          </div>
+        </div>
+        <p class="feedback" id="rewardAdminFeedback"></p>
       </section>
     `;
   }
@@ -1161,6 +1454,7 @@
       requestPassword("Enter reset password", () => {
         const state = getProfileState();
         state.profiles[state.activeId].progress = {};
+        state.profiles[state.activeId].rewards = normalizeRewardState();
         saveProfileState(state);
         updateTotalProgress();
         refreshCurrentArea();
@@ -1255,6 +1549,23 @@
           feedback.textContent = `Grammar test ${booklet} reset for ${getActiveProfile().name}.`;
         }
         setProgressStore(store);
+      });
+    });
+  }
+
+  function wireAdultRewardsPanel() {
+    app.querySelector("#viewRewardsFromAdult").addEventListener("click", () => {
+      location.hash = "rewards";
+    });
+
+    app.querySelector("#resetRewards").addEventListener("click", () => {
+      requestPassword("Enter reset password", () => {
+        const state = getProfileState();
+        state.profiles[state.activeId].rewards = normalizeRewardState();
+        saveProfileState(state);
+        renderAdultArea();
+        const feedback = app.querySelector("#rewardAdminFeedback");
+        if (feedback) feedback.textContent = `Reward collection reset for ${getActiveProfile().name}.`;
       });
     });
   }
@@ -1401,6 +1712,9 @@
     if (!state?.activeId || !state?.profiles?.[state.activeId]) {
       return getProfileState();
     }
+    Object.keys(state.profiles).forEach((id) => {
+      state.profiles[id] = normalizeProfile(state.profiles[id]);
+    });
     return state;
   }
 
