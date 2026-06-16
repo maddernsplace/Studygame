@@ -834,6 +834,55 @@ h1 {
   gap: 12px;
 }
 
+.workbook-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.triple-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.workbook-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+  font-weight: 900;
+}
+
+.workbook-card.correct {
+  background: #dcfce7;
+}
+
+.workbook-card.wrong {
+  background: #fee2e2;
+}
+
+.triple-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.triple-row label {
+  display: grid;
+  gap: 6px;
+}
+
+.triple-row input,
+.workbook-line input {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+}
+
 .result-card {
   display: grid;
   gap: 16px;
@@ -871,6 +920,10 @@ h1 {
 
   .reward-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .triple-grid {
+    grid-template-columns: 1fr;
   }
 
   .day-grid,
@@ -929,6 +982,10 @@ h1 {
   .day-grid,
   .times-grid,
   .reward-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .triple-row {
     grid-template-columns: 1fr;
   }
 

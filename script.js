@@ -11,6 +11,7 @@
   const year34Spelling = window.YEAR34_SPELLING || { worksheets: [] };
   const year4TrickyWords = window.YEAR4_TRICKY_WORDS || { sheets: [] };
   const year4ColumnMaths = window.YEAR4_COLUMN_MATHS || { questions: [] };
+  const year4MathsWorkbook = window.YEAR4_MATHS_WORKBOOK || { activities: [] };
   const rewardSet = window.REWARD_SET?.items || [];
   const subjectKeys = ["maths", "english", "science", "technology"];
   const years = ["Preschool", "Reception", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6", "Year 7"];
@@ -58,6 +59,12 @@
     {
       id: "year4-column-maths",
       label: "Year 4 Column Maths",
+      year: "Year 4",
+      subject: "maths"
+    },
+    {
+      id: "year4-maths-workbook",
+      label: "Year 4 Maths Workbook",
       year: "Year 4",
       subject: "maths"
     }
@@ -112,6 +119,11 @@
       return;
     }
 
+    if (location.hash.startsWith("#maths-workbook/")) {
+      location.hash = "maths-workbook";
+      return;
+    }
+
     if (location.hash === "#times") {
       selectedYear = "Year 4";
       location.hash = "subject/maths";
@@ -143,6 +155,12 @@
     }
 
     if (location.hash === "#column-maths") {
+      selectedYear = "Year 4";
+      location.hash = "subject/maths";
+      return;
+    }
+
+    if (location.hash === "#maths-workbook") {
       selectedYear = "Year 4";
       location.hash = "subject/maths";
       return;
@@ -246,6 +264,15 @@
 
     if (view === "column-maths") {
       renderColumnMathsPractice();
+      return;
+    }
+
+    if (view === "maths-workbook") {
+      if (subject) {
+        renderMathsWorkbookActivity(subject);
+      } else {
+        renderMathsWorkbookMenu();
+      }
       return;
     }
 
@@ -354,6 +381,9 @@
           ${key === "maths" && selectedYear === "Year 4" && hasWorksheetAccess("year4-column-maths") ? `
             <button class="primary-action times-action" type="button" id="columnMathsButton">Column Maths</button>
           ` : ""}
+          ${key === "maths" && selectedYear === "Year 4" && hasWorksheetAccess("year4-maths-workbook") ? `
+            <button class="primary-action times-action" type="button" id="mathsWorkbookButton">Maths Workbook</button>
+          ` : ""}
         </div>
       </section>
     `;
@@ -408,6 +438,13 @@
     if (columnMathsButton) {
       columnMathsButton.addEventListener("click", () => {
         location.hash = "column-maths";
+      });
+    }
+
+    const mathsWorkbookButton = app.querySelector("#mathsWorkbookButton");
+    if (mathsWorkbookButton) {
+      mathsWorkbookButton.addEventListener("click", () => {
+        location.hash = "maths-workbook";
       });
     }
   }
@@ -942,6 +979,176 @@
     app.querySelector("#clearColumnMaths").addEventListener("click", renderColumnMathsPractice);
   }
 
+  function renderMathsWorkbookMenu() {
+    pageTitle.textContent = "Maths Workbook";
+    backButton.classList.remove("hidden");
+
+    app.innerHTML = `
+      <section class="panel times-menu">
+        <div class="times-heading">
+          <div>
+            <h2>${year4MathsWorkbook.title}</h2>
+            <p>${getActiveProfile().name} can work through extra multiplication and division workbook activities.</p>
+          </div>
+          <span class="selected-badge">${year4MathsWorkbook.activities.length} activities</span>
+        </div>
+        <div class="booklet-list">
+          ${year4MathsWorkbook.activities.map((activity) => `
+            <article class="booklet-card">
+              <div>
+                <h3>${activity.title}</h3>
+                <p>${activity.items.length} questions</p>
+              </div>
+              <div class="single-action-grid">
+                <button class="day-button ${getWorkbookRecord(activity.id).completed ? "done" : ""}" type="button" data-workbook-activity="${activity.id}">
+                  <span>Open Activity</span>
+                  <small>${workbookStatusLabel(activity.id)}</small>
+                </button>
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    `;
+
+    app.querySelectorAll("[data-workbook-activity]").forEach((button) => {
+      button.addEventListener("click", () => {
+        location.hash = `maths-workbook/${button.dataset.workbookActivity}`;
+      });
+    });
+  }
+
+  function renderMathsWorkbookActivity(activityId) {
+    const activity = year4MathsWorkbook.activities.find((item) => item.id === activityId);
+    if (!activity) {
+      location.hash = "maths-workbook";
+      return;
+    }
+
+    pageTitle.textContent = activity.title;
+    backButton.classList.remove("hidden");
+
+    if (activity.type === "triple-input") {
+      renderWorkbookTripleInput(activity);
+      return;
+    }
+
+    renderWorkbookSingleInput(activity);
+  }
+
+  function renderWorkbookTripleInput(activity) {
+    app.innerHTML = `
+      <section class="panel times-practice">
+        <div class="quiz-topline">
+          <span>${getActiveProfile().name}</span>
+          <span>${workbookAttemptLabel(activity.id)}</span>
+        </div>
+        <div class="workbook-grid triple-grid">
+          ${activity.items.map((item, index) => `
+            <div class="workbook-card" data-workbook-item="${index}">
+              <strong>${item.label}</strong>
+              <div class="triple-row">
+                <label><span>x2</span><input inputmode="numeric" type="text" aria-label="${item.label} x2"></label>
+                <label><span>x4</span><input inputmode="numeric" type="text" aria-label="${item.label} x4"></label>
+                <label><span>x8</span><input inputmode="numeric" type="text" aria-label="${item.label} x8"></label>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+        <p class="feedback" id="workbookFeedback"></p>
+        <div class="actions-row">
+          <button class="primary-action times-action" type="button" id="checkWorkbook">Check Answers</button>
+          <button class="primary-action secondary-action" type="button" id="clearWorkbook">Clear</button>
+        </div>
+      </section>
+    `;
+
+    app.querySelector("#checkWorkbook").addEventListener("click", () => checkWorkbookTripleInput(activity));
+    app.querySelector("#clearWorkbook").addEventListener("click", () => renderWorkbookTripleInput(activity));
+  }
+
+  function renderWorkbookSingleInput(activity) {
+    app.innerHTML = `
+      <section class="panel times-practice">
+        <div class="quiz-topline">
+          <span>${getActiveProfile().name}</span>
+          <span>${workbookAttemptLabel(activity.id)}</span>
+        </div>
+        <div class="sentence-grid">
+          ${activity.items.map((item, index) => `
+            <label class="sentence-card workbook-line" data-workbook-item="${index}">
+              <span>${item.label}. ${item.prompt}</span>
+              <input inputmode="numeric" type="text" aria-label="Workbook answer ${item.label}" autocomplete="off">
+            </label>
+          `).join("")}
+        </div>
+        <p class="feedback" id="workbookFeedback"></p>
+        <div class="actions-row">
+          <button class="primary-action times-action" type="button" id="checkWorkbook">Check Answers</button>
+          <button class="primary-action secondary-action" type="button" id="clearWorkbook">Clear</button>
+        </div>
+      </section>
+    `;
+
+    app.querySelector("#checkWorkbook").addEventListener("click", () => checkWorkbookSingleInput(activity));
+    app.querySelector("#clearWorkbook").addEventListener("click", () => renderWorkbookSingleInput(activity));
+  }
+
+  function checkWorkbookTripleInput(activity) {
+    let correct = 0;
+    const total = activity.items.length * 3;
+    const cards = app.querySelectorAll("[data-workbook-item]");
+
+    activity.items.forEach((item, index) => {
+      const card = cards[index];
+      const inputs = card.querySelectorAll("input");
+      let itemCorrect = true;
+      item.answers.forEach((answer, answerIndex) => {
+        const input = inputs[answerIndex];
+        const value = Number(input.value.trim());
+        const isCorrect = input.value.trim() !== "" && value === answer;
+        if (isCorrect) {
+          correct += 1;
+        } else {
+          itemCorrect = false;
+        }
+      });
+      card.classList.toggle("correct", itemCorrect);
+      card.classList.toggle("wrong", !itemCorrect);
+    });
+
+    const percent = Math.round((correct / total) * 100);
+    finishWorkbookAttempt(activity.id, percent, correct, total);
+  }
+
+  function checkWorkbookSingleInput(activity) {
+    let correct = 0;
+    const cards = app.querySelectorAll("[data-workbook-item]");
+
+    activity.items.forEach((item, index) => {
+      const card = cards[index];
+      const input = card.querySelector("input");
+      const value = Number(input.value.trim());
+      const isCorrect = input.value.trim() !== "" && value === item.answer;
+      card.classList.toggle("correct", isCorrect);
+      card.classList.toggle("wrong", !isCorrect);
+      if (isCorrect) correct += 1;
+    });
+
+    const percent = Math.round((correct / activity.items.length) * 100);
+    finishWorkbookAttempt(activity.id, percent, correct, activity.items.length);
+  }
+
+  function finishWorkbookAttempt(activityId, percent, correct, total) {
+    const rewards = saveWorkbookAttempt(activityId, percent);
+    updateTotalProgress();
+    app.querySelector("#workbookFeedback").textContent = `${resultMessage(percent)} You got ${correct} out of ${total}. Attempt saved.`;
+
+    if (rewards.length) {
+      showRewardReveal(rewards, "Workbook reward unlocked!");
+    }
+  }
+
   function checkColumnMathsAnswers() {
     let correct = 0;
     const cards = app.querySelectorAll("[data-column-sum]");
@@ -1352,6 +1559,22 @@
     return awardRewardsForRecord(key, previous, percent);
   }
 
+  function saveWorkbookAttempt(activityId, percent) {
+    const store = getProgressStore();
+    const key = `maths-workbook:${activityId}`;
+    const previous = normalizeTimesRecord(store[key]);
+    store[key] = {
+      best: Math.max(previous.best, percent),
+      attempts: previous.attempts + 1,
+      completed: true,
+      lastScore: percent,
+      perfectRewarded: previous.perfectRewarded || percent === 100,
+      updatedAt: new Date().toISOString()
+    };
+    setProgressStore(store);
+    return awardRewardsForRecord(key, previous, percent);
+  }
+
   function getTimesProgress(booklet, day) {
     return normalizeTimesRecord(getProgressStore()[`times:${booklet}:${day}`]).best;
   }
@@ -1378,6 +1601,10 @@
 
   function getColumnMathsRecord() {
     return normalizeTimesRecord(getProgressStore()["column-maths:1"]);
+  }
+
+  function getWorkbookRecord(activityId) {
+    return normalizeTimesRecord(getProgressStore()[`maths-workbook:${activityId}`]);
   }
 
   function normalizeTimesRecord(value) {
@@ -1441,6 +1668,17 @@
 
   function columnMathsAttemptLabel() {
     const record = getColumnMathsRecord();
+    return `Best ${record.best}% - Attempts ${record.attempts}`;
+  }
+
+  function workbookStatusLabel(activityId) {
+    const record = getWorkbookRecord(activityId);
+    if (!record.completed) return "Not done";
+    return `Done ${record.best}% - ${record.attempts} tries`;
+  }
+
+  function workbookAttemptLabel(activityId) {
+    const record = getWorkbookRecord(activityId);
     return `Best ${record.best}% - Attempts ${record.attempts}`;
   }
 
@@ -1713,7 +1951,7 @@
 
   function defaultWorksheetPacksForYear(year) {
     if (year === "Year 3") return ["year3-english-spelling", "year3-english-grammar", "year34-english-spelling"];
-    if (year === "Year 4") return ["year4-times-tables", "year34-english-spelling", "year4-english-tricky-words", "year4-column-maths"];
+    if (year === "Year 4") return ["year4-times-tables", "year34-english-spelling", "year4-english-tricky-words", "year4-column-maths", "year4-maths-workbook"];
     return [];
   }
 
@@ -1874,6 +2112,7 @@
               <option value="year34-english-spelling">Year 3 and 4 Spelling Sheets</option>
               <option value="year4-english-tricky-words">Year 4 Tricky Words</option>
               <option value="year4-column-maths">Year 4 Column Maths</option>
+              <option value="year4-maths-workbook">Year 4 Maths Workbook</option>
             </select>
           </label>
           <label>
@@ -2054,6 +2293,11 @@
         } else if (packId === "year4-column-maths") {
           delete store["column-maths:1"];
           feedback.textContent = `Column maths reset for ${getActiveProfile().name}.`;
+        } else if (packId === "year4-maths-workbook") {
+          year4MathsWorkbook.activities.forEach((activity) => {
+            delete store[`maths-workbook:${activity.id}`];
+          });
+          feedback.textContent = `Maths workbook progress reset for ${getActiveProfile().name}.`;
         }
         setProgressStore(store);
       });
