@@ -909,6 +909,521 @@ h1 {
   gap: 12px;
 }
 
+.workbook-menu-page {
+  display: grid;
+  gap: 18px;
+}
+
+.workbook-banner {
+  padding: 18px 22px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fdba74 100%);
+  box-shadow: 8px 8px 0 var(--ink);
+}
+
+.workbook-banner h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1.08;
+}
+
+.workbook-note,
+.workbook-status,
+.workbook-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.workbook-note p {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.workbook-status span,
+.workbook-footer span {
+  font-weight: 900;
+}
+
+.workbook-menu-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.workbook-menu-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 8px 8px 0 var(--ink);
+}
+
+.workbook-menu-card p {
+  margin: 0;
+}
+
+.workbook-page {
+  display: grid;
+  gap: 16px;
+}
+
+.workbook-feedback {
+  margin: 0;
+}
+
+.workbook-actions {
+  justify-content: flex-start;
+}
+
+.table-double-sheet,
+.grid-method-sheet,
+.missing-number-sheet,
+.word-problem-sheet,
+.triangle-sheet {
+  padding: 20px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: #fffef8;
+  box-shadow: 8px 8px 0 var(--ink);
+}
+
+.table-double-sheet {
+  display: grid;
+  gap: 10px;
+}
+
+.table-double-head,
+.table-double-row {
+  display: grid;
+  grid-template-columns: 1.05fr repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: center;
+}
+
+.table-double-head {
+  padding: 0 2px 8px;
+  color: var(--muted);
+  font-size: 0.96rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.table-double-row {
+  padding: 8px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.number-cell,
+.locked-cell {
+  display: grid;
+  place-items: center;
+  min-height: 52px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: #fef3c7;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.locked-cell {
+  background: #dbeafe;
+}
+
+.table-double-row input,
+.grid-table input,
+.missing-digit,
+.word-answer,
+.triangle-input,
+.wheel-answer {
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 10px;
+  color: var(--ink);
+  text-align: center;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 1.02rem;
+  font-weight: 900;
+}
+
+.workbook-table-page [data-workbook-item].correct,
+.workbook-grid-page [data-workbook-item].correct,
+.workbook-missing-page [data-workbook-item].correct,
+.workbook-word-page [data-workbook-item].correct {
+  background: #dcfce7;
+}
+
+.workbook-table-page [data-workbook-item].wrong,
+.workbook-grid-page [data-workbook-item].wrong,
+.workbook-missing-page [data-workbook-item].wrong,
+.workbook-word-page [data-workbook-item].wrong {
+  background: #fee2e2;
+}
+
+.wheel-sheet {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  padding: 20px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: #fffef8;
+  box-shadow: 8px 8px 0 var(--ink);
+}
+
+.wheel-card {
+  padding: 12px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.wheel-card.correct {
+  background: #dcfce7;
+}
+
+.wheel-card.wrong {
+  background: #fee2e2;
+}
+
+.wheel-shell {
+  position: relative;
+  aspect-ratio: 1;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.wheel-lines {
+  width: 100%;
+  height: 100%;
+}
+
+.wheel-lines circle,
+.wheel-lines line {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+
+.wheel-center,
+.wheel-number,
+.wheel-answer {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.wheel-center {
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 23%;
+  aspect-ratio: 1;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: #facc15;
+  font-size: 1.18rem;
+  font-weight: 900;
+}
+
+.wheel-number {
+  top: var(--y);
+  left: var(--x);
+  display: grid;
+  place-items: center;
+  width: 12%;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: #dbeafe;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.wheel-answer {
+  top: var(--y);
+  left: var(--x);
+  width: 18%;
+  min-height: auto;
+  aspect-ratio: 1.15;
+  padding: 2px;
+  font-size: 0.94rem;
+}
+
+.triangle-sheet {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.triangle-card {
+  position: relative;
+  padding: 14px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.triangle-card.correct {
+  background: #dcfce7;
+}
+
+.triangle-card.wrong {
+  background: #fee2e2;
+}
+
+.triangle-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 10px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  font-weight: 900;
+}
+
+.triangle-shape {
+  position: relative;
+  aspect-ratio: 1.15;
+}
+
+.triangle-shape svg {
+  width: 100%;
+  height: 100%;
+}
+
+.triangle-shape path {
+  fill: currentColor;
+  stroke: var(--ink);
+  stroke-width: 5;
+}
+
+.triangle-pink {
+  color: #f9a8d4;
+}
+
+.triangle-magenta {
+  color: #f472b6;
+}
+
+.triangle-peach {
+  color: #fdba74;
+}
+
+.triangle-orange {
+  color: #fb923c;
+}
+
+.triangle-purple {
+  color: #c4b5fd;
+}
+
+.triangle-top,
+.triangle-left,
+.triangle-right,
+.triangle-multiply,
+.triangle-input {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.triangle-top,
+.triangle-left,
+.triangle-right,
+.triangle-multiply {
+  color: var(--ink);
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.triangle-top,
+.triangle-input-top {
+  top: 21%;
+  left: 50%;
+}
+
+.triangle-left,
+.triangle-input-left {
+  top: 72%;
+  left: 27%;
+}
+
+.triangle-right,
+.triangle-input-right {
+  top: 72%;
+  left: 73%;
+}
+
+.triangle-multiply {
+  top: 59%;
+  left: 50%;
+  font-size: 1.7rem;
+}
+
+.triangle-input {
+  width: 74px;
+  min-height: 48px;
+}
+
+.grid-method-sheet {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.grid-method-card,
+.missing-number-card,
+.word-problem-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.grid-number,
+.missing-number-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: #fef3c7;
+  font-weight: 900;
+}
+
+.grid-table {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px;
+  align-items: stretch;
+}
+
+.grid-table > span,
+.sum-top span,
+.sum-multiplier span,
+.sum-product span {
+  display: grid;
+  place-items: center;
+  min-height: 52px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+  font-weight: 900;
+}
+
+.grid-x {
+  grid-column: 1;
+  grid-row: 1;
+  background: #dbeafe;
+}
+
+.grid-top {
+  background: #fef3c7;
+}
+
+.grid-left {
+  grid-column: 1;
+  grid-row: 2;
+  background: #bbf7d0;
+}
+
+.missing-number-sheet {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.missing-sum {
+  display: grid;
+  gap: 8px;
+  width: min(240px, 100%);
+  margin-left: auto;
+}
+
+.sum-top,
+.sum-multiplier,
+.sum-product {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.sum-top {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sum-multiplier {
+  grid-template-columns: 1fr 1fr;
+}
+
+.sum-multiplier span:first-child {
+  background: #dbeafe;
+}
+
+.sum-rule {
+  height: 4px;
+  background: var(--ink);
+  border-radius: 999px;
+}
+
+.missing-digit {
+  min-height: 52px;
+  padding: 8px 0;
+}
+
+.word-problem-sheet {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.word-problem-card {
+  grid-template-columns: minmax(0, 1.2fr) 118px;
+  align-items: center;
+}
+
+.word-copy {
+  display: grid;
+  gap: 12px;
+}
+
+.word-copy p {
+  margin: 0;
+  color: var(--ink);
+  line-height: 1.5;
+  font-weight: 800;
+}
+
+.word-art {
+  width: 100%;
+  aspect-ratio: 1;
+  color: var(--orange);
+}
+
+.word-art use {
+  fill: currentColor;
+}
+
 .workbook-grid {
   display: grid;
   gap: 12px;
@@ -997,6 +1512,18 @@ h1 {
     grid-template-columns: 1fr;
   }
 
+  .workbook-menu-list,
+  .grid-method-sheet,
+  .missing-number-sheet,
+  .word-problem-sheet {
+    grid-template-columns: 1fr;
+  }
+
+  .wheel-sheet,
+  .triangle-sheet {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .column-maths-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1057,12 +1584,32 @@ h1 {
   .day-grid,
   .times-grid,
   .reward-grid,
-  .column-maths-grid {
+  .column-maths-grid,
+  .wheel-sheet,
+  .triangle-sheet,
+  .workbook-menu-list,
+  .grid-method-sheet,
+  .missing-number-sheet,
+  .word-problem-sheet {
     grid-template-columns: 1fr;
   }
 
   .triple-row {
     grid-template-columns: 1fr;
+  }
+
+  .table-double-head,
+  .table-double-row {
+    grid-template-columns: 1fr;
+  }
+
+  .word-problem-card {
+    grid-template-columns: 1fr;
+  }
+
+  .wheel-answer {
+    width: 20%;
+    font-size: 0.82rem;
   }
 
   .sum-card {

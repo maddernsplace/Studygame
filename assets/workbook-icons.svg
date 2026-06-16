@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <symbol id="table" viewBox="0 0 200 200">
+    <ellipse cx="100" cy="52" rx="64" ry="16" fill="#f5f5f5" stroke="#bdbdbd" stroke-width="3"/>
+    <ellipse cx="100" cy="46" rx="70" ry="16" fill="#ffffff" stroke="#cfcfcf" stroke-width="2"/>
+    <g fill="#c28a47" stroke="#8a5a24" stroke-width="3">
+      <path d="M62 66h16l-18 78-12-3z"/>
+      <path d="M94 66h16l-8 100-14-2z"/>
+      <path d="M124 66h16l10 92-14 2z"/>
+      <path d="M150 66h14l26 74-12 4z"/>
+    </g>
+    <ellipse cx="112" cy="150" rx="76" ry="22" fill="#d8d8d8"/>
+  </symbol>
+  <symbol id="marbles" viewBox="0 0 200 200">
+    <ellipse cx="108" cy="152" rx="72" ry="12" fill="#d9d9d9"/>
+    <g>
+      <g transform="translate(45,72)">
+        <circle cx="0" cy="50" r="34" fill="#cfe1b3" stroke="#9bb17f" stroke-width="3"/>
+        <path d="M-18 24c18 9 9 33 28 42 12 6 25-3 28-11" fill="none" stroke="#d4b06d" stroke-width="6" opacity=".8"/>
+        <path d="M-10 20c10 6 14 15 16 29" fill="none" stroke="#7eb2a7" stroke-width="5" opacity=".8"/>
+      </g>
+      <use href="#marble-single" x="82" y="54"/>
+      <use href="#marble-single" x="116" y="78"/>
+    </g>
+  </symbol>
+  <symbol id="marble-single" viewBox="0 0 100 100">
+    <circle cx="34" cy="46" r="34" fill="#d7e6b7" stroke="#9bb17f" stroke-width="3"/>
+    <path d="M10 26c18 9 9 33 28 42 12 6 25-3 28-11" fill="none" stroke="#d4b06d" stroke-width="6" opacity=".8"/>
+    <path d="M18 18c14 10 17 18 18 31" fill="none" stroke="#7eb2a7" stroke-width="5" opacity=".8"/>
+  </symbol>
+  <symbol id="gamepad" viewBox="0 0 200 200">
+    <path d="M58 96c12-16 72-18 90-5 22 16 28 55 14 74-10 13-24 12-38 3-10-6-24-6-34 0-13 8-28 10-38-2-15-17-10-55 6-70z" fill="#2b2b30" stroke="#111" stroke-width="3"/>
+    <rect x="78" y="58" width="44" height="28" rx="8" fill="#25b8f2"/>
+    <rect x="66" y="104" width="24" height="7" rx="3" fill="#3d4a58"/>
+    <rect x="74" y="96" width="7" height="24" rx="3" fill="#3d4a58"/>
+    <circle cx="126" cy="100" r="6" fill="#ff4d73"/>
+    <circle cx="140" cy="108" r="6" fill="#ffd24d"/>
+    <circle cx="114" cy="112" r="6" fill="#4db8ff"/>
+    <circle cx="100" cy="138" r="12" fill="#111"/>
+    <circle cx="72" cy="136" r="12" fill="#111"/>
+    <circle cx="130" cy="136" r="12" fill="#111"/>
+  </symbol>
+  <symbol id="lollies" viewBox="0 0 200 200">
+    <ellipse cx="112" cy="155" rx="58" ry="16" fill="#dedede"/>
+    <g transform="translate(94,114) rotate(-18)">
+      <path d="M-48 0l18-16v32z" fill="#ffd74f" stroke="#d29a12" stroke-width="3"/>
+      <rect x="-30" y="-18" width="60" height="36" rx="14" fill="#ffe55a" stroke="#d29a12" stroke-width="3"/>
+      <path d="M48 0L30-16v32z" fill="#ffd74f" stroke="#d29a12" stroke-width="3"/>
+      <path d="M-10 -12c8 6 12 14 20 24" stroke="#c42d2d" stroke-width="4" fill="none"/>
+    </g>
+    <use href="#lolly-single" x="42" y="96"/>
+    <use href="#lolly-single" x="102" y="144"/>
+  </symbol>
+  <symbol id="lolly-single" viewBox="0 0 100 100">
+    <g transform="translate(50,50)">
+      <path d="M-40 0l16-14v28z" fill="#ffd74f" stroke="#d29a12" stroke-width="3"/>
+      <rect x="-24" y="-16" width="48" height="32" rx="12" fill="#ffe55a" stroke="#d29a12" stroke-width="3"/>
+      <path d="M40 0L24-14v28z" fill="#ffd74f" stroke="#d29a12" stroke-width="3"/>
+    </g>
+  </symbol>
+  <symbol id="flowers" viewBox="0 0 200 200">
+    <g transform="translate(104,154)">
+      <path d="M0 0C-8-44 -6-92 -4-124" stroke="#2d6f3b" stroke-width="6" fill="none"/>
+      <path d="M8 0C6-48 10-90 10-126" stroke="#2d6f3b" stroke-width="6" fill="none"/>
+      <path d="M-10 0C-16-40 -18-80 -20-116" stroke="#2d6f3b" stroke-width="6" fill="none"/>
+    </g>
+    <g fill="#f6d44a" stroke="#b78721" stroke-width="2">
+      <g transform="translate(92,42)"><circle r="10" fill="#d7922a"/><path d="M0-24l8 16 18-8-8 16 16 8-18 2 2 18-10-14-12 14 2-18-18-2 16-8-8-16 18 8z"/></g>
+      <g transform="translate(122,58) scale(.9)"><circle r="10" fill="#d7922a"/><path d="M0-24l8 16 18-8-8 16 16 8-18 2 2 18-10-14-12 14 2-18-18-2 16-8-8-16 18 8z"/></g>
+      <g transform="translate(106,78) scale(.8)"><circle r="10" fill="#d7922a"/><path d="M0-24l8 16 18-8-8 16 16 8-18 2 2 18-10-14-12 14 2-18-18-2 16-8-8-16 18 8z"/></g>
+      <g transform="translate(138,34) scale(.8)"><circle r="10" fill="#d7922a"/><path d="M0-24l8 16 18-8-8 16 16 8-18 2 2 18-10-14-12 14 2-18-18-2 16-8-8-16 18 8z"/></g>
+    </g>
+  </symbol>
+  <symbol id="stickers" viewBox="0 0 200 200">
+    <path d="M50 46c22-10 84-18 110 14 12 16 8 44-10 60-18 14-50 34-82 30-28-4-44-28-38-58 4-22 8-32 20-46z" fill="#dff0c8" stroke="#9bb17f" stroke-width="3"/>
+    <g fill="#6fb7ff" stroke="#466b86" stroke-width="4">
+      <path d="M88 78l14 12 18-16-8 18 18 10-20 2-4 20-10-16-18 8 10-18-14-14 18 2z"/>
+    </g>
+  </symbol>
+  <symbol id="dominoes" viewBox="0 0 200 200">
+    <ellipse cx="110" cy="154" rx="80" ry="16" fill="#dedede"/>
+    <g fill="#3d3d3d" stroke="#1f1f1f" stroke-width="3">
+      <rect x="118" y="84" width="28" height="70" rx="2"/>
+      <rect x="146" y="74" width="28" height="70" rx="2"/>
+      <rect x="88" y="102" width="28" height="70" rx="2" transform="rotate(-32 102 136)"/>
+      <rect x="54" y="112" width="28" height="70" rx="2" transform="rotate(-32 68 146)"/>
+    </g>
+    <g fill="#f4f4f4">
+      <circle cx="128" cy="102" r="3"/><circle cx="128" cy="132" r="3"/><circle cx="136" cy="117" r="3"/>
+      <circle cx="156" cy="92" r="3"/><circle cx="156" cy="122" r="3"/><circle cx="164" cy="107" r="3"/>
+      <circle cx="100" cy="128" r="3"/><circle cx="111" cy="145" r="3"/><circle cx="90" cy="145" r="3"/>
+      <circle cx="66" cy="146" r="3"/><circle cx="77" cy="163" r="3"/><circle cx="56" cy="163" r="3"/>
+    </g>
+  </symbol>
+  <symbol id="cereal" viewBox="0 0 200 200">
+    <path d="M84 38h56l20 18v110l-18 12H84z" fill="#2ca7e0" stroke="#1e6f97" stroke-width="3"/>
+    <path d="M84 38l-16 10v112l16 18z" fill="#3dc0ef" stroke="#1e6f97" stroke-width="3"/>
+    <text x="122" y="88" text-anchor="middle" font-size="18" font-family="Arial" font-weight="700" fill="#ffd84a">WHOLE</text>
+    <text x="122" y="108" text-anchor="middle" font-size="18" font-family="Arial" font-weight="700" fill="#ffd84a">GRAIN</text>
+    <text x="122" y="128" text-anchor="middle" font-size="18" font-family="Arial" font-weight="700" fill="#ffd84a">CEREAL</text>
+    <ellipse cx="122" cy="154" rx="30" ry="14" fill="#ffffff" stroke="#bdbdbd" stroke-width="2"/>
+    <g fill="#d9a43a" stroke="#9b6b1c" stroke-width="1.5">
+      <path d="M108 148c5-6 12-4 14 2-4 3-10 4-14-2z"/>
+      <path d="M118 156c4-5 10-4 12 2-3 2-8 3-12-2z"/>
+      <path d="M128 148c4-5 9-4 12 2-4 2-9 3-12-2z"/>
+    </g>
+  </symbol>
+  <symbol id="football" viewBox="0 0 200 200">
+    <ellipse cx="100" cy="106" rx="66" ry="42" fill="#d64535" stroke="#9a2419" stroke-width="4"/>
+    <path d="M42 112c28 18 90 18 116-4" fill="none" stroke="#9a2419" stroke-width="4"/>
+    <ellipse cx="100" cy="104" rx="28" ry="16" fill="#3c6ab3"/>
+    <text x="100" y="109" text-anchor="middle" font-size="14" font-family="Arial" font-weight="700" fill="#f8d54f">twinkl</text>
+  </symbol>
+  <symbol id="chips" viewBox="0 0 200 200">
+    <path d="M56 74l88 10-10 74-82-14z" fill="#3b74b8" stroke="#234c7b" stroke-width="3"/>
+    <path d="M56 74l10-24 86 14-8 20z" fill="#4c89d1" stroke="#234c7b" stroke-width="3"/>
+    <g fill="#d9a145" stroke="#9d6e25" stroke-width="2">
+      <path d="M80 122c8-6 20-3 24 7-5 8-18 10-24-7z"/>
+      <path d="M102 130c8-6 20-3 24 7-5 8-18 10-24-7z"/>
+      <path d="M90 146c8-6 18-2 22 8-6 6-18 8-22-8z"/>
+      <path d="M68 140c7-5 15-2 18 7-4 5-14 8-18-7z"/>
+    </g>
+  </symbol>
+  <symbol id="voucher" viewBox="0 0 200 200">
+    <path d="M44 72l102-18 20 26-12 76-102 18-16-30z" fill="#e8f2ff" stroke="#6683a7" stroke-width="3"/>
+    <path d="M50 140l106-18" stroke="#6683a7" stroke-width="2"/>
+    <text x="118" y="90" transform="rotate(-9 118 90)" font-size="18" font-family="Arial" fill="#2b2b2b">£1.15 off</text>
+    <rect x="66" y="100" width="24" height="24" transform="rotate(-9 78 112)" fill="#ff8a5b"/>
+    <text x="118" y="136" transform="rotate(-9 118 136)" font-size="18" font-family="Arial" fill="#1e2b52">Voucher</text>
+  </symbol>
+</svg>

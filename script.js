@@ -1016,20 +1016,19 @@
     backButton.classList.remove("hidden");
 
     app.innerHTML = `
-      <section class="panel times-menu">
-        <div class="times-heading">
-          <div>
-            <h2>${year4MathsWorkbook.title}</h2>
-            <p>${getActiveProfile().name} can work through extra multiplication and division workbook activities.</p>
-          </div>
-          <span class="selected-badge">${year4MathsWorkbook.activities.length} activities</span>
+      <section class="workbook-menu-page">
+        <div class="workbook-banner">
+          <h2>${year4MathsWorkbook.title}</h2>
         </div>
-        <div class="booklet-list">
+        <div class="workbook-note">
+          <p>${getActiveProfile().name} can open each workbook page as an interactive worksheet.</p>
+        </div>
+        <div class="booklet-list workbook-menu-list">
           ${year4MathsWorkbook.activities.map((activity) => `
-            <article class="booklet-card">
+            <article class="booklet-card workbook-menu-card">
               <div>
-                <h3>${activity.title}</h3>
-                <p>${activity.items.length} questions</p>
+                <h3>Page ${activity.page}</h3>
+                <p>${activity.title}</p>
               </div>
               <div class="single-action-grid">
                 <button class="day-button ${getWorkbookRecord(activity.id).completed ? "done" : ""}" type="button" data-workbook-activity="${activity.id}">
@@ -1039,6 +1038,7 @@
               </div>
             </article>
           `).join("")}
+        </div>
         </div>
       </section>
     `;
@@ -1060,85 +1060,248 @@
     pageTitle.textContent = activity.title;
     backButton.classList.remove("hidden");
 
-    if (activity.type === "triple-input") {
-      renderWorkbookTripleInput(activity);
-      return;
-    }
-
-    renderWorkbookSingleInput(activity);
+    if (activity.type === "table-double") return renderWorkbookTableDouble(activity);
+    if (activity.type === "multiplication-wheels") return renderWorkbookWheels(activity, "multiply");
+    if (activity.type === "division-wheels") return renderWorkbookWheels(activity, "divide");
+    if (activity.type === "triangles") return renderWorkbookTriangles(activity);
+    if (activity.type === "grid-method") return renderWorkbookGridMethod(activity);
+    if (activity.type === "missing-number") return renderWorkbookMissingNumber(activity);
+    if (activity.type === "word-problems") return renderWorkbookWordProblems(activity);
   }
 
-  function renderWorkbookTripleInput(activity) {
-    app.innerHTML = `
-      <section class="panel times-practice">
-        <div class="quiz-topline">
-          <span>${getActiveProfile().name}</span>
+  function workbookPageShell(activity, bodyMarkup, extraClass = "") {
+    return `
+      <section class="workbook-page ${extraClass}">
+        <div class="workbook-banner">
+          <h2>${escapeHtml(activity.title)}</h2>
+        </div>
+        ${activity.instruction ? `
+          <div class="workbook-note">
+            <p>${escapeHtml(activity.instruction)}</p>
+          </div>
+        ` : ""}
+        <div class="workbook-status">
+          <span>${escapeHtml(getActiveProfile().name)}</span>
           <span>${workbookAttemptLabel(activity.id)}</span>
         </div>
-        <div class="workbook-grid triple-grid">
-          ${activity.items.map((item, index) => `
-            <div class="workbook-card" data-workbook-item="${index}">
-              <strong>${item.label}</strong>
-              <div class="triple-row">
-                <label><span>x2</span><input inputmode="numeric" type="text" aria-label="${item.label} x2"></label>
-                <label><span>x4</span><input inputmode="numeric" type="text" aria-label="${item.label} x4"></label>
-                <label><span>x8</span><input inputmode="numeric" type="text" aria-label="${item.label} x8"></label>
-              </div>
+        ${bodyMarkup}
+        <p class="feedback workbook-feedback" id="workbookFeedback"></p>
+        <div class="actions-row workbook-actions">
+          <button class="primary-action times-action" type="button" id="checkWorkbook">Check Answers</button>
+          <button class="primary-action secondary-action" type="button" id="clearWorkbook">Clear</button>
+        </div>
+        <div class="workbook-footer">
+          <span>Page ${activity.page} of 16</span>
+        </div>
+      </section>
+    `;
+  }
+
+  function renderWorkbookTableDouble(activity) {
+    app.innerHTML = workbookPageShell(activity, `
+      <div class="table-double-sheet">
+        <div class="table-double-head">
+          <span>Number</span>
+          <span>x2</span>
+          <span>x4</span>
+          <span>x8</span>
+        </div>
+        ${activity.items.map((item, index) => `
+          <div class="table-double-row" data-workbook-item="${index}">
+            <span class="number-cell">${item.label}</span>
+            ${item.answers.map((answer, answerIndex) => item.locked?.[answerIndex]
+              ? `<span class="locked-cell">${answer}</span>`
+              : `<input inputmode="numeric" type="text" aria-label="${item.label} column ${answerIndex + 1}" data-answer="${answer}">`
+            ).join("")}
+          </div>
+        `).join("")}
+      </div>
+    `, "workbook-table-page");
+
+    app.querySelector("#checkWorkbook").addEventListener("click", () => checkWorkbookTableDouble(activity));
+    app.querySelector("#clearWorkbook").addEventListener("click", () => renderWorkbookTableDouble(activity));
+  }
+
+  function renderWorkbookWheels(activity, operator) {
+    app.innerHTML = workbookPageShell(activity, `
+      <div class="wheel-sheet">
+        ${activity.wheels.map((wheel, index) => workbookWheelMarkup(wheel, index, operator)).join("")}
+      </div>
+    `, "workbook-wheel-page");
+
+    app.querySelector("#checkWorkbook").addEventListener("click", () => checkWorkbookWheels(activity, operator));
+    app.querySelector("#clearWorkbook").addEventListener("click", () => renderWorkbookWheels(activity, operator));
+  }
+
+  function workbookWheelMarkup(wheel, index, operator) {
+    const positions = wheelPositions();
+    const isMultiply = operator === "multiply";
+    const centerLabel = `${isMultiply ? "x" : "÷"}${wheel.center}`;
+    return `
+      <div class="wheel-card" data-workbook-item="${index}">
+        <div class="wheel-shell">
+          <svg class="wheel-lines" viewBox="0 0 220 220" aria-hidden="true">
+            <circle cx="110" cy="110" r="92"></circle>
+            <circle cx="110" cy="110" r="58"></circle>
+            <circle cx="110" cy="110" r="32"></circle>
+            ${positions.map((_, lineIndex) => {
+              const angle = (-90 + lineIndex * 30) * (Math.PI / 180);
+              const x = 110 + Math.cos(angle) * 92;
+              const y = 110 + Math.sin(angle) * 92;
+              return `<line x1="110" y1="110" x2="${x.toFixed(2)}" y2="${y.toFixed(2)}"></line>`;
+            }).join("")}
+          </svg>
+          <div class="wheel-center">${centerLabel}</div>
+          ${wheel.numbers.map((number, numberIndex) => `
+            <span class="wheel-number" style="--x:${positions[numberIndex].innerX}%;--y:${positions[numberIndex].innerY}%">${number}</span>
+          `).join("")}
+          ${wheel.numbers.map((number, numberIndex) => `
+            <input class="wheel-answer" data-answer="${isMultiply ? number * wheel.center : number / wheel.center}" style="--x:${positions[numberIndex].outerX}%;--y:${positions[numberIndex].outerY}%"
+              inputmode="numeric" type="text" aria-label="Wheel ${wheel.center} answer ${numberIndex + 1}">
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  function wheelPositions() {
+    return Array.from({ length: 12 }, (_, index) => {
+      const angle = ((-60 + index * 30) * Math.PI) / 180;
+      const innerRadius = 33;
+      const outerRadius = 44;
+      return {
+        innerX: 50 + Math.cos(angle) * innerRadius,
+        innerY: 50 + Math.sin(angle) * innerRadius,
+        outerX: 50 + Math.cos(angle) * outerRadius,
+        outerY: 50 + Math.sin(angle) * outerRadius
+      };
+    });
+  }
+
+  function renderWorkbookTriangles(activity) {
+    app.innerHTML = workbookPageShell(activity, `
+      <div class="triangle-sheet">
+        ${activity.items.map((item, index) => workbookTriangleMarkup(item, index)).join("")}
+      </div>
+    `, "workbook-triangle-page");
+
+    app.querySelector("#checkWorkbook").addEventListener("click", () => checkWorkbookTriangles(activity));
+    app.querySelector("#clearWorkbook").addEventListener("click", () => renderWorkbookTriangles(activity));
+  }
+
+  function workbookTriangleMarkup(item, index) {
+    const topMarkup = item.top === null
+      ? `<input class="triangle-input triangle-input-top" data-answer="${item.answer}" inputmode="numeric" type="text" aria-label="Triangle ${item.number} top answer">`
+      : `<span class="triangle-top">${item.top}</span>`;
+    const leftMarkup = item.left === null
+      ? `<input class="triangle-input triangle-input-left" data-answer="${item.answer}" inputmode="numeric" type="text" aria-label="Triangle ${item.number} left answer">`
+      : `<span class="triangle-left">${item.left}</span>`;
+    const rightMarkup = item.right === null
+      ? `<input class="triangle-input triangle-input-right" data-answer="${item.answer}" inputmode="numeric" type="text" aria-label="Triangle ${item.number} right answer">`
+      : `<span class="triangle-right">${item.right}</span>`;
+    return `
+      <div class="triangle-card triangle-${item.color}" data-workbook-item="${index}">
+        <span class="triangle-number">${item.number}</span>
+        <div class="triangle-shape">
+          <svg viewBox="0 0 240 200" aria-hidden="true">
+            <path d="M120 16 L24 184 L216 184 Z"></path>
+          </svg>
+          ${topMarkup}
+          ${leftMarkup}
+          <span class="triangle-multiply">x</span>
+          ${rightMarkup}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderWorkbookGridMethod(activity) {
+    app.innerHTML = workbookPageShell(activity, `
+      <div class="grid-method-sheet">
+        ${activity.items.map((item, index) => `
+          <div class="grid-method-card" data-workbook-item="${index}">
+            <span class="grid-number">${item.number}</span>
+            <div class="grid-table">
+              <span class="grid-x">x</span>
+              <span class="grid-top">${item.top[0]}</span>
+              <span class="grid-top">${item.top[1]}</span>
+              <span class="grid-left">${item.left}</span>
+              <input data-answer="${item.answers[0]}" inputmode="numeric" type="text" aria-label="Grid ${item.number} first box">
+              <input data-answer="${item.answers[1]}" inputmode="numeric" type="text" aria-label="Grid ${item.number} second box">
             </div>
-          `).join("")}
-        </div>
-        <p class="feedback" id="workbookFeedback"></p>
-        <div class="actions-row">
-          <button class="primary-action times-action" type="button" id="checkWorkbook">Check Answers</button>
-          <button class="primary-action secondary-action" type="button" id="clearWorkbook">Clear</button>
-        </div>
-      </section>
-    `;
+          </div>
+        `).join("")}
+      </div>
+    `, "workbook-grid-page");
 
-    app.querySelector("#checkWorkbook").addEventListener("click", () => checkWorkbookTripleInput(activity));
-    app.querySelector("#clearWorkbook").addEventListener("click", () => renderWorkbookTripleInput(activity));
+    app.querySelector("#checkWorkbook").addEventListener("click", () => checkWorkbookInputsByDataAnswer(activity));
+    app.querySelector("#clearWorkbook").addEventListener("click", () => renderWorkbookGridMethod(activity));
   }
 
-  function renderWorkbookSingleInput(activity) {
-    app.innerHTML = `
-      <section class="panel times-practice">
-        <div class="quiz-topline">
-          <span>${getActiveProfile().name}</span>
-          <span>${workbookAttemptLabel(activity.id)}</span>
-        </div>
-        <div class="sentence-grid">
-          ${activity.items.map((item, index) => `
-            <label class="sentence-card workbook-line" data-workbook-item="${index}">
-              <span>${item.label}. ${item.prompt}</span>
-              <input inputmode="numeric" type="text" aria-label="Workbook answer ${item.label}" autocomplete="off">
-            </label>
-          `).join("")}
-        </div>
-        <p class="feedback" id="workbookFeedback"></p>
-        <div class="actions-row">
-          <button class="primary-action times-action" type="button" id="checkWorkbook">Check Answers</button>
-          <button class="primary-action secondary-action" type="button" id="clearWorkbook">Clear</button>
-        </div>
-      </section>
-    `;
+  function renderWorkbookMissingNumber(activity) {
+    app.innerHTML = workbookPageShell(activity, `
+      <div class="missing-number-sheet">
+        ${activity.items.map((item, index) => `
+          <div class="missing-number-card" data-workbook-item="${index}">
+            <span class="missing-number-badge">${item.number}</span>
+            <div class="missing-sum">
+              <div class="sum-top">
+                ${item.top.map((digit) => digit === null
+                  ? `<input class="missing-digit" data-answer="${item.answer}" inputmode="numeric" maxlength="1" type="text" aria-label="Missing digit ${item.number}">`
+                  : `<span>${digit}</span>`
+                ).join("")}
+              </div>
+              <div class="sum-multiplier">
+                <span>x</span>
+                ${item.multiplier === null
+                  ? `<input class="missing-digit" data-answer="${item.answer}" inputmode="numeric" maxlength="1" type="text" aria-label="Missing multiplier ${item.number}">`
+                  : `<span>${item.multiplier}</span>`}
+              </div>
+              <div class="sum-rule"></div>
+              <div class="sum-product">${item.product.split("").map((digit) => `<span>${digit}</span>`).join("")}</div>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `, "workbook-missing-page");
 
-    app.querySelector("#checkWorkbook").addEventListener("click", () => checkWorkbookSingleInput(activity));
-    app.querySelector("#clearWorkbook").addEventListener("click", () => renderWorkbookSingleInput(activity));
+    app.querySelector("#checkWorkbook").addEventListener("click", () => checkWorkbookInputsByDataAnswer(activity));
+    app.querySelector("#clearWorkbook").addEventListener("click", () => renderWorkbookMissingNumber(activity));
   }
 
-  function checkWorkbookTripleInput(activity) {
+  function renderWorkbookWordProblems(activity) {
+    app.innerHTML = workbookPageShell(activity, `
+      <div class="word-problem-sheet">
+        ${activity.items.map((item, index) => `
+          <div class="word-problem-card" data-workbook-item="${index}">
+            <div class="word-copy">
+              <p><strong>${item.number}.</strong> ${item.prompt}</p>
+              <input class="word-answer" data-answer="${item.answer}" inputmode="numeric" type="text" aria-label="Word problem ${item.number}">
+            </div>
+            <svg class="word-art" viewBox="0 0 200 200" aria-hidden="true">
+              <use href="assets/workbook-icons.svg#${item.asset}"></use>
+            </svg>
+          </div>
+        `).join("")}
+      </div>
+    `, "workbook-word-page");
+
+    app.querySelector("#checkWorkbook").addEventListener("click", () => checkWorkbookInputsByDataAnswer(activity));
+    app.querySelector("#clearWorkbook").addEventListener("click", () => renderWorkbookWordProblems(activity));
+  }
+
+  function checkWorkbookTableDouble(activity) {
     let correct = 0;
-    const total = activity.items.length * 3;
+    let total = 0;
     const cards = app.querySelectorAll("[data-workbook-item]");
-
-    activity.items.forEach((item, index) => {
-      const card = cards[index];
+    cards.forEach((card) => {
       const inputs = card.querySelectorAll("input");
       let itemCorrect = true;
-      item.answers.forEach((answer, answerIndex) => {
-        const input = inputs[answerIndex];
-        const value = Number(input.value.trim());
-        const isCorrect = input.value.trim() !== "" && value === answer;
+      inputs.forEach((input) => {
+        total += 1;
+        const expected = Number(input.dataset.answer);
+        const actual = Number(input.value.trim());
+        const isCorrect = input.value.trim() !== "" && actual === expected;
         if (isCorrect) {
           correct += 1;
         } else {
@@ -1148,30 +1311,76 @@
       card.classList.toggle("correct", itemCorrect);
       card.classList.toggle("wrong", !itemCorrect);
     });
-
-    const percent = Math.round((correct / total) * 100);
-    finishWorkbookAttempt(activity.id, percent, correct, total);
+    finishWorkbookAttempt(activity.id, correct, total);
   }
 
-  function checkWorkbookSingleInput(activity) {
+  function checkWorkbookWheels(activity, operator) {
     let correct = 0;
+    let total = 0;
     const cards = app.querySelectorAll("[data-workbook-item]");
+    cards.forEach((card) => {
+      const inputs = card.querySelectorAll("input");
+      let itemCorrect = true;
+      inputs.forEach((input) => {
+        total += 1;
+        const expected = Number(input.dataset.answer);
+        const actual = Number(input.value.trim());
+        const isCorrect = input.value.trim() !== "" && actual === expected;
+        if (isCorrect) {
+          correct += 1;
+        } else {
+          itemCorrect = false;
+        }
+      });
+      card.classList.toggle("correct", itemCorrect);
+      card.classList.toggle("wrong", !itemCorrect);
+    });
+    finishWorkbookAttempt(activity.id, correct, total);
+  }
 
-    activity.items.forEach((item, index) => {
-      const card = cards[index];
+  function checkWorkbookTriangles(activity) {
+    let correct = 0;
+    let total = 0;
+    const cards = app.querySelectorAll("[data-workbook-item]");
+    cards.forEach((card) => {
       const input = card.querySelector("input");
-      const value = Number(input.value.trim());
-      const isCorrect = input.value.trim() !== "" && value === item.answer;
+      total += 1;
+      const expected = Number(input.dataset.answer);
+      const actual = Number(input.value.trim());
+      const isCorrect = input.value.trim() !== "" && actual === expected;
+      if (isCorrect) correct += 1;
       card.classList.toggle("correct", isCorrect);
       card.classList.toggle("wrong", !isCorrect);
-      if (isCorrect) correct += 1;
     });
-
-    const percent = Math.round((correct / activity.items.length) * 100);
-    finishWorkbookAttempt(activity.id, percent, correct, activity.items.length);
+    finishWorkbookAttempt(activity.id, correct, total);
   }
 
-  function finishWorkbookAttempt(activityId, percent, correct, total) {
+  function checkWorkbookInputsByDataAnswer(activity) {
+    let correct = 0;
+    let total = 0;
+    const cards = app.querySelectorAll("[data-workbook-item]");
+    cards.forEach((card) => {
+      const inputs = card.querySelectorAll("input");
+      let itemCorrect = true;
+      inputs.forEach((input) => {
+        total += 1;
+        const expected = Number(input.dataset.answer);
+        const actual = Number(input.value.trim());
+        const isCorrect = input.value.trim() !== "" && actual === expected;
+        if (isCorrect) {
+          correct += 1;
+        } else {
+          itemCorrect = false;
+        }
+      });
+      card.classList.toggle("correct", itemCorrect);
+      card.classList.toggle("wrong", !itemCorrect);
+    });
+    finishWorkbookAttempt(activity.id, correct, total);
+  }
+
+  function finishWorkbookAttempt(activityId, correct, total) {
+    const percent = Math.round((correct / total) * 100);
     const rewards = saveWorkbookAttempt(activityId, percent);
     updateTotalProgress();
     app.querySelector("#workbookFeedback").textContent = `${resultMessage(percent)} You got ${correct} out of ${total}. Attempt saved.`;
