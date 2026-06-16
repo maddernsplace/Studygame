@@ -194,6 +194,8 @@ h1 {
 
 .profile-controls select,
 .profile-controls input,
+.student-learning-grid select,
+.student-learning-grid input,
 .worksheet-reset-grid input {
   width: 100%;
   min-height: 52px;
@@ -374,6 +376,10 @@ h1 {
   background: var(--cyan);
 }
 
+.english-action {
+  background: #f9a8d4;
+}
+
 .cloud-action {
   background: #93c5fd;
 }
@@ -404,10 +410,78 @@ h1 {
   align-items: end;
 }
 
-.worksheet-reset-grid label {
+.student-learning-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.worksheet-reset-grid label,
+.student-learning-grid label {
   display: grid;
   gap: 6px;
   color: var(--muted);
+  font-weight: 900;
+}
+
+.worksheet-access {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.checkbox-row {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.checkbox-row input {
+  width: 22px;
+  min-height: 22px;
+}
+
+.password-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(23, 32, 51, 0.45);
+  z-index: 50;
+}
+
+.password-dialog {
+  width: min(460px, 100%);
+  padding: 22px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 10px 10px 0 var(--ink);
+}
+
+.password-dialog h2 {
+  margin: 0 0 8px;
+}
+
+.password-dialog p {
+  margin: 0 0 12px;
+}
+
+.password-dialog input {
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 10px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+}
+
+.password-error {
+  min-height: 24px;
+  color: #b91c1c;
   font-weight: 900;
 }
 
@@ -427,6 +501,10 @@ h1 {
 .booklet-list {
   display: grid;
   gap: 18px;
+}
+
+.single-action-grid {
+  display: grid;
 }
 
 .booklet-card {
@@ -516,6 +594,40 @@ h1 {
 }
 
 .sum-card.wrong {
+  background: #fee2e2;
+}
+
+.sentence-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.sentence-card {
+  display: grid;
+  gap: 10px;
+  min-height: 84px;
+  padding: 14px;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+  font-weight: 900;
+}
+
+.sentence-card input {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.sentence-card.correct {
+  background: #dcfce7;
+}
+
+.sentence-card.wrong {
   background: #fee2e2;
 }
 
@@ -635,6 +747,7 @@ h1 {
   .profile-panel,
   .profile-controls,
   .adult-settings-panel,
+  .student-learning-grid,
   .worksheet-reset-grid,
   .subject-layout,
   .answers-grid,

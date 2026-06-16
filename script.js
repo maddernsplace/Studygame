@@ -1,19 +1,36 @@
 (function () {
   const app = document.querySelector("#app");
+  const body = document.body;
   const pageTitle = document.querySelector("#pageTitle");
   const backButton = document.querySelector("#backButton");
   const totalProgress = document.querySelector("#totalProgress");
   const subjects = window.SCHOOL_DATA || {};
   const year4TimesTables = window.YEAR4_TIMES_TABLES || [];
+  const year3English = window.YEAR3_ENGLISH || {};
   const subjectKeys = ["maths", "english", "science", "technology"];
   const years = ["Preschool", "Reception", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6", "Year 7"];
   const encouragement = ["Brilliant!", "Nice thinking!", "You nailed it!", "Super work!", "Brain power!"];
   const resetPassword = "1256";
+  const worksheetPacks = [
+    {
+      id: "year3-english-spelling",
+      label: "Year 3 Spelling Fix-Ups",
+      year: "Year 3",
+      subject: "english"
+    },
+    {
+      id: "year4-times-tables",
+      label: "Year 4 Times Tables",
+      year: "Year 4",
+      subject: "maths"
+    }
+  ];
 
   let selectedYear = "Preschool";
   let quizState = null;
   let cloudSaveTimer = null;
   let adultUnlocked = false;
+  let passwordRequest = null;
 
   window.addEventListener("school-cloud-ready", () => {
     if (!location.hash) renderDashboard();
@@ -35,9 +52,20 @@
       return;
     }
 
+    if (location.hash.startsWith("#english-spelling-practice/")) {
+      location.hash = "english-spelling";
+      return;
+    }
+
     if (location.hash === "#times") {
       selectedYear = "Year 4";
       location.hash = "subject/maths";
+      return;
+    }
+
+    if (location.hash === "#english-spelling") {
+      selectedYear = "Year 3";
+      location.hash = "subject/english";
       return;
     }
 
@@ -83,6 +111,16 @@
 
     if (view === "times-practice") {
       renderTimesPractice(Number(subject), Number(year));
+      return;
+    }
+
+    if (view === "english-spelling") {
+      renderEnglishSpellingMenu();
+      return;
+    }
+
+    if (view === "english-spelling-practice") {
+      renderEnglishSpellingPractice(Number(subject));
       return;
     }
 
@@ -136,6 +174,10 @@
 
   function renderSubject(key) {
     const subject = subjects[key];
+    const availableYears = getStudentYears();
+    if (!availableYears.includes(selectedYear)) {
+      selectedYear = availableYears[0];
+    }
     pageTitle.textContent = subject.name;
     backButton.classList.remove("hidden");
     quizState = null;
@@ -147,7 +189,7 @@
           <h2>Choose a Year</h2>
           <p>${subject.message} Pick your level and start a quick quiz.</p>
           <div class="year-grid">
-            ${years.map((year) => `
+            ${availableYears.map((year) => `
               <button class="year-pill ${year === selectedYear ? "active" : ""}" type="button" data-year="${year}">
                 ${year}
               </button>
@@ -160,7 +202,10 @@
           <p>${getYearProgressText(key, selectedYear)}</p>
           <div class="progress-track"><div class="progress-fill" style="width: ${getYearProgress(key, selectedYear)}%"></div></div>
           <button class="primary-action" type="button" id="startButton">Start Quiz</button>
-          ${key === "maths" && selectedYear === "Year 4" ? `
+          ${key === "english" && selectedYear === "Year 3" && hasWorksheetAccess("year3-english-spelling") ? `
+            <button class="primary-action english-action" type="button" id="spellingButton">Spelling Fix-Ups</button>
+          ` : ""}
+          ${key === "maths" && selectedYear === "Year 4" && hasWorksheetAccess("year4-times-tables") ? `
             <button class="primary-action times-action" type="button" id="timesButton">Daily Times Tables</button>
           ` : ""}
         </div>
@@ -184,6 +229,112 @@
         location.hash = "times";
       });
     }
+
+    const spellingButton = app.querySelector("#spellingButton");
+    if (spellingButton) {
+      spellingButton.addEventListener("click", () => {
+        location.hash = "english-spelling";
+      });
+    }
+  }
+
+  function renderEnglishSpellingMenu() {
+    const pack = year3English.spellingFixups;
+    pageTitle.textContent = "Year 3 Spelling";
+    backButton.classList.remove("hidden");
+    quizState = null;
+
+    app.innerHTML = `
+      <section class="panel times-menu">
+        <div class="times-heading">
+          <div>
+            <h2>${pack.title}</h2>
+            <p>${getActiveProfile().name} can work through spelling correction worksheets with typed answers.</p>
+          </div>
+          <span class="selected-badge">${pack.worksheets.length} worksheets</span>
+        </div>
+        <div class="booklet-list">
+          ${pack.worksheets.map((worksheet) => `
+            <article class="booklet-card">
+              <div>
+                <h3>Worksheet ${worksheet.worksheet}</h3>
+                <p>${worksheet.items.length} spelling fixes</p>
+              </div>
+              <div class="single-action-grid">
+                <button class="day-button ${getEnglishSpellingRecord(worksheet.worksheet).completed ? "done" : ""}" type="button" data-spelling-sheet="${worksheet.worksheet}">
+                  <span>Open Worksheet</span>
+                  <small>${englishSpellingStatusLabel(worksheet.worksheet)}</small>
+                </button>
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    `;
+
+    app.querySelectorAll("[data-spelling-sheet]").forEach((button) => {
+      button.addEventListener("click", () => {
+        location.hash = `english-spelling-practice/${button.dataset.spellingSheet}`;
+      });
+    });
+  }
+
+  function renderEnglishSpellingPractice(worksheetNumber) {
+    const pack = year3English.spellingFixups;
+    const worksheet = pack.worksheets.find((item) => item.worksheet === worksheetNumber);
+    if (!worksheet) {
+      location.hash = "english-spelling";
+      return;
+    }
+
+    pageTitle.textContent = `Spelling Worksheet ${worksheetNumber}`;
+    backButton.classList.remove("hidden");
+
+    app.innerHTML = `
+      <section class="panel times-practice">
+        <div class="quiz-topline">
+          <span>${getActiveProfile().name}</span>
+          <span>${englishSpellingAttemptLabel(worksheetNumber)}</span>
+        </div>
+        <div class="sentence-grid">
+          ${worksheet.items.map((item, index) => `
+            <label class="sentence-card" data-sentence="${index}">
+              <span>${index + 1}. ${item.sentence}</span>
+              <input inputmode="text" type="text" aria-label="Spelling answer ${index + 1}" autocomplete="off">
+            </label>
+          `).join("")}
+        </div>
+        <p class="feedback" id="spellingFeedback"></p>
+        <div class="actions-row">
+          <button class="primary-action english-action" type="button" id="checkSpelling">Check Spellings</button>
+          <button class="primary-action secondary-action" type="button" id="clearSpelling">Clear</button>
+        </div>
+      </section>
+    `;
+
+    app.querySelector("#checkSpelling").addEventListener("click", () => checkEnglishSpellingAnswers(worksheet));
+    app.querySelector("#clearSpelling").addEventListener("click", () => renderEnglishSpellingPractice(worksheetNumber));
+  }
+
+  function checkEnglishSpellingAnswers(worksheet) {
+    let correct = 0;
+    const cards = app.querySelectorAll(".sentence-card");
+
+    worksheet.items.forEach((item, index) => {
+      const card = cards[index];
+      const input = card.querySelector("input");
+      const value = normalizeTypedAnswer(input.value);
+      const isCorrect = value !== "" && value === normalizeTypedAnswer(item.answer);
+      card.classList.toggle("correct", isCorrect);
+      card.classList.toggle("wrong", !isCorrect);
+      input.value = input.value.trim();
+      if (isCorrect) correct += 1;
+    });
+
+    const percent = Math.round((correct / worksheet.items.length) * 100);
+    saveEnglishSpellingAttempt(worksheet.worksheet, percent);
+    updateTotalProgress();
+    app.querySelector("#spellingFeedback").textContent = `${resultMessage(percent)} You fixed ${correct} out of ${worksheet.items.length}. Attempt saved.`;
   }
 
   function renderTimesTableMenu() {
@@ -416,7 +567,12 @@
   function getProfileState() {
     try {
       const state = JSON.parse(localStorage.getItem("schoolQuestProfiles"));
-      if (state?.activeId && state.profiles?.[state.activeId]) return state;
+      if (state?.activeId && state.profiles?.[state.activeId]) {
+        Object.keys(state.profiles).forEach((id) => {
+          state.profiles[id] = normalizeProfile(state.profiles[id]);
+        });
+        return state;
+      }
     } catch (error) {
       // Fall through to default state.
     }
@@ -429,6 +585,9 @@
         [id]: {
           id,
           name: "Student",
+          age: "",
+          year: "Year 4",
+          worksheetPacks: defaultWorksheetPacksForYear("Year 4"),
           progress: oldProgress
         }
       }
@@ -453,7 +612,7 @@
 
   function getActiveProfile() {
     const state = getProfileState();
-    return state.profiles[state.activeId];
+    return normalizeProfile(state.profiles[state.activeId]);
   }
 
   function saveYearProgress(subject, year, percent) {
@@ -477,12 +636,30 @@
     setProgressStore(store);
   }
 
+  function saveEnglishSpellingAttempt(worksheet, percent) {
+    const store = getProgressStore();
+    const key = `english-spelling:${worksheet}`;
+    const previous = normalizeTimesRecord(store[key]);
+    store[key] = {
+      best: Math.max(previous.best, percent),
+      attempts: previous.attempts + 1,
+      completed: true,
+      lastScore: percent,
+      updatedAt: new Date().toISOString()
+    };
+    setProgressStore(store);
+  }
+
   function getTimesProgress(booklet, day) {
     return normalizeTimesRecord(getProgressStore()[`times:${booklet}:${day}`]).best;
   }
 
   function getTimesRecord(booklet, day) {
     return normalizeTimesRecord(getProgressStore()[`times:${booklet}:${day}`]);
+  }
+
+  function getEnglishSpellingRecord(worksheet) {
+    return normalizeTimesRecord(getProgressStore()[`english-spelling:${worksheet}`]);
   }
 
   function normalizeTimesRecord(value) {
@@ -509,13 +686,25 @@
     return `Best ${record.best}% - Attempts ${record.attempts}`;
   }
 
+  function englishSpellingStatusLabel(worksheet) {
+    const record = getEnglishSpellingRecord(worksheet);
+    if (!record.completed) return "Not done";
+    return `Done ${record.best}% - ${record.attempts} tries`;
+  }
+
+  function englishSpellingAttemptLabel(worksheet) {
+    const record = getEnglishSpellingRecord(worksheet);
+    return `Best ${record.best}% - Attempts ${record.attempts}`;
+  }
+
   function getYearProgress(subject, year) {
     return getProgressStore()[`${subject}:${year}`] || 0;
   }
 
   function getSubjectProgress(subject) {
-    const total = years.reduce((sum, year) => sum + getYearProgress(subject, year), 0);
-    return Math.round(total / years.length);
+    const studentYears = getStudentYears();
+    const total = studentYears.reduce((sum, year) => sum + getYearProgress(subject, year), 0);
+    return Math.round(total / studentYears.length);
   }
 
   function getYearProgressText(subject, year) {
@@ -525,11 +714,41 @@
   }
 
   function updateTotalProgress() {
-    const slots = subjectKeys.length * years.length;
+    const studentYears = getStudentYears();
+    const slots = subjectKeys.length * studentYears.length;
     const total = subjectKeys.reduce((sum, subject) => {
-      return sum + years.reduce((yearSum, year) => yearSum + getYearProgress(subject, year), 0);
+      return sum + studentYears.reduce((yearSum, year) => yearSum + getYearProgress(subject, year), 0);
     }, 0);
     totalProgress.textContent = `${Math.round(total / slots)}%`;
+  }
+
+  function normalizeProfile(profile) {
+    const year = years.includes(profile?.year) ? profile.year : "Year 4";
+    const packs = Array.isArray(profile?.worksheetPacks) ? profile.worksheetPacks : [];
+    const defaultPacks = defaultWorksheetPacksForYear(year);
+
+    return {
+      id: profile?.id || createProfileId(profile?.name || "Student"),
+      name: profile?.name || "Student",
+      age: profile?.age || "",
+      year,
+      worksheetPacks: packs.length ? packs : defaultPacks,
+      progress: profile?.progress || {}
+    };
+  }
+
+  function getStudentYears() {
+    return [getActiveProfile().year || "Year 4"];
+  }
+
+  function hasWorksheetAccess(packId) {
+    return getActiveProfile().worksheetPacks.includes(packId);
+  }
+
+  function defaultWorksheetPacksForYear(year) {
+    if (year === "Year 3") return ["year3-english-spelling"];
+    if (year === "Year 4") return ["year4-times-tables"];
+    return [];
   }
 
   function studentHomePanel() {
@@ -537,7 +756,7 @@
     return `
       <section class="student-hero">
         <div>
-          <span class="profile-chip">Playing as ${escapeHtml(profile.name)}</span>
+          <span class="profile-chip">Playing as ${escapeHtml(profile.name)} - ${escapeHtml(profile.year)}</span>
           <h2>Choose Your Learning Quest</h2>
         </div>
         <button class="adult-button" type="button" id="adultButton">Adult</button>
@@ -555,11 +774,11 @@
   }
 
   function unlockAdultArea() {
-    const password = window.prompt("Adult password");
-    if (password !== resetPassword) return;
-    adultUnlocked = true;
-    location.hash = "adult";
-    renderAdultArea();
+    requestPassword("Adult password", () => {
+      adultUnlocked = true;
+      location.hash = "adult";
+      renderAdultArea();
+    });
   }
 
   function renderAdultArea() {
@@ -569,10 +788,12 @@
 
     app.innerHTML = `
       ${profilePanel()}
+      ${studentLearningPanel()}
       ${adultWorksheetResetPanel()}
     `;
 
     wireProfilePanel();
+    wireStudentLearningPanel();
     wireAdultWorksheetReset();
   }
 
@@ -603,6 +824,16 @@
             <span>New student</span>
             <input id="newProfileName" type="text" maxlength="24" placeholder="Name">
           </label>
+          <label>
+            <span>Age</span>
+            <input id="newProfileAge" type="number" min="1" max="18" placeholder="Age">
+          </label>
+          <label>
+            <span>School year</span>
+            <select id="newProfileYear">
+              ${years.map((year) => `<option value="${year}" ${year === "Year 4" ? "selected" : ""}>${year}</option>`).join("")}
+            </select>
+          </label>
           <button class="primary-action" type="button" id="addProfile">Add Student</button>
           <button class="primary-action danger-action" type="button" id="resetStudent">Reset Student</button>
           <button class="primary-action cloud-action" type="button" id="cloudSignIn" ${cloud.configured && !cloud.user ? "" : "disabled"}>Sign in with Google</button>
@@ -610,6 +841,45 @@
           <button class="primary-action cloud-action" type="button" id="cloudLoad" ${cloud.user ? "" : "disabled"}>Load from Cloud</button>
           <button class="primary-action cloud-action" type="button" id="cloudSave" ${cloud.user ? "" : "disabled"}>Save to Cloud</button>
         </div>
+      </section>
+    `;
+  }
+
+  function studentLearningPanel() {
+    const profile = getActiveProfile();
+    return `
+      <section class="panel adult-settings-panel">
+        <div>
+          <h2>Student Learning Setup</h2>
+          <p>Set the age, school year, and worksheet packs this student can access.</p>
+        </div>
+        <div class="student-learning-grid">
+          <label>
+            <span>Name</span>
+            <input id="editProfileName" type="text" maxlength="24" value="${escapeHtml(profile.name)}">
+          </label>
+          <label>
+            <span>Age</span>
+            <input id="editProfileAge" type="number" min="1" max="18" value="${escapeHtml(String(profile.age || ""))}">
+          </label>
+          <label>
+            <span>School year</span>
+            <select id="editProfileYear">
+              ${years.map((year) => `<option value="${year}" ${year === profile.year ? "selected" : ""}>${year}</option>`).join("")}
+            </select>
+          </label>
+          <div class="worksheet-access">
+            <strong>Worksheet packs</strong>
+            ${worksheetPacks.map((pack) => `
+              <label class="checkbox-row">
+                <input type="checkbox" value="${pack.id}" ${profile.worksheetPacks.includes(pack.id) ? "checked" : ""}>
+                <span>${pack.label}</span>
+              </label>
+            `).join("")}
+          </div>
+          <button class="primary-action" type="button" id="saveLearningSetup">Save Learning Setup</button>
+        </div>
+        <p class="feedback" id="learningFeedback"></p>
       </section>
     `;
   }
@@ -623,7 +893,14 @@
         </div>
         <div class="worksheet-reset-grid">
           <label>
-            <span>Booklet</span>
+            <span>Pack</span>
+            <select id="resetPack">
+              <option value="year4-times-tables">Year 4 Times Tables</option>
+              <option value="year3-english-spelling">Year 3 Spelling Fix-Ups</option>
+            </select>
+          </label>
+          <label>
+            <span>Worksheet / Booklet</span>
             <input id="resetBooklet" inputmode="numeric" type="number" min="1" max="26" value="1">
           </label>
           <label>
@@ -643,31 +920,40 @@
       state.activeId = event.target.value;
       saveProfileState(state);
       updateTotalProgress();
-      renderDashboard();
+      refreshCurrentArea();
     });
 
     app.querySelector("#addProfile").addEventListener("click", () => {
       const input = app.querySelector("#newProfileName");
+      const ageInput = app.querySelector("#newProfileAge");
+      const yearInput = app.querySelector("#newProfileYear");
       const name = input.value.trim();
       if (!name) return;
 
+      const year = yearInput.value;
       const state = getProfileState();
       const id = createProfileId(name);
-      state.profiles[id] = { id, name, progress: {} };
+      state.profiles[id] = normalizeProfile({
+        id,
+        name,
+        age: ageInput.value.trim(),
+        year,
+        worksheetPacks: defaultWorksheetPacksForYear(year),
+        progress: {}
+      });
       state.activeId = id;
       saveProfileState(state);
-      renderDashboard();
+      refreshCurrentArea();
     });
 
     app.querySelector("#resetStudent").addEventListener("click", () => {
-      const password = window.prompt("Enter reset password");
-      if (password !== resetPassword) return;
-
-      const state = getProfileState();
-      state.profiles[state.activeId].progress = {};
-      saveProfileState(state);
-      updateTotalProgress();
-      renderDashboard();
+      requestPassword("Enter reset password", () => {
+        const state = getProfileState();
+        state.profiles[state.activeId].progress = {};
+        saveProfileState(state);
+        updateTotalProgress();
+        refreshCurrentArea();
+      });
     });
 
     const signInButton = app.querySelector("#cloudSignIn");
@@ -692,7 +978,48 @@
     }
   }
 
+  function wireStudentLearningPanel() {
+    app.querySelector("#saveLearningSetup").addEventListener("click", () => {
+      const state = getProfileState();
+      const profile = state.profiles[state.activeId];
+      const selectedPacks = Array.from(app.querySelectorAll(".worksheet-access input:checked")).map((input) => input.value);
+
+      profile.name = app.querySelector("#editProfileName").value.trim() || profile.name;
+      profile.age = app.querySelector("#editProfileAge").value.trim();
+      profile.year = app.querySelector("#editProfileYear").value;
+      profile.worksheetPacks = selectedPacks;
+      state.profiles[state.activeId] = normalizeProfile(profile);
+      saveProfileState(state);
+      selectedYear = state.profiles[state.activeId].year;
+      updateTotalProgress();
+      renderAdultArea();
+      const refreshedFeedback = app.querySelector("#learningFeedback");
+      if (refreshedFeedback) refreshedFeedback.textContent = "Learning setup saved.";
+    });
+  }
+
+  function refreshCurrentArea() {
+    if (location.hash === "#adult" && adultUnlocked) {
+      renderAdultArea();
+      return;
+    }
+
+    renderDashboard();
+  }
+
   function wireAdultWorksheetReset() {
+    const packSelect = app.querySelector("#resetPack");
+    const dayInput = app.querySelector("#resetDay");
+
+    packSelect.addEventListener("change", () => {
+      if (packSelect.value === "year3-english-spelling") {
+        dayInput.disabled = true;
+        dayInput.value = 1;
+      } else {
+        dayInput.disabled = false;
+      }
+    });
+
     app.querySelector("#resetWorksheet").addEventListener("click", () => {
       const booklet = Number(app.querySelector("#resetBooklet").value);
       const day = Number(app.querySelector("#resetDay").value);
@@ -703,11 +1030,77 @@
         return;
       }
 
-      const store = getProgressStore();
-      delete store[`times:${booklet}:${day}`];
-      setProgressStore(store);
-      feedback.textContent = `Booklet ${booklet}, Day ${day} reset for ${getActiveProfile().name}.`;
+      requestPassword("Enter reset password", () => {
+        const store = getProgressStore();
+        const packId = app.querySelector("#resetPack").value;
+        if (packId === "year4-times-tables") {
+          delete store[`times:${booklet}:${day}`];
+          feedback.textContent = `Booklet ${booklet}, Day ${day} reset for ${getActiveProfile().name}.`;
+        } else if (packId === "year3-english-spelling") {
+          delete store[`english-spelling:${booklet}`];
+          feedback.textContent = `Worksheet ${booklet} reset for ${getActiveProfile().name}.`;
+        }
+        setProgressStore(store);
+      });
     });
+  }
+
+  function requestPassword(title, onSuccess) {
+    passwordRequest = { title, error: "", onSuccess };
+    renderPasswordOverlay();
+  }
+
+  function renderPasswordOverlay() {
+    removePasswordOverlay();
+    if (!passwordRequest) return;
+
+    const overlay = document.createElement("div");
+    overlay.id = "passwordOverlay";
+    overlay.className = "password-overlay";
+    overlay.innerHTML = `
+      <div class="password-dialog">
+        <h2>${escapeHtml(passwordRequest.title)}</h2>
+        <p>Enter the adult password to continue.</p>
+        <input id="passwordInput" type="password" inputmode="numeric" autocomplete="off">
+        <p class="password-error">${escapeHtml(passwordRequest.error || "")}</p>
+        <div class="actions-row">
+          <button class="primary-action" type="button" id="passwordConfirm">Unlock</button>
+          <button class="primary-action secondary-action" type="button" id="passwordCancel">Cancel</button>
+        </div>
+      </div>
+    `;
+    body.appendChild(overlay);
+
+    overlay.querySelector("#passwordConfirm").addEventListener("click", confirmPasswordOverlay);
+    overlay.querySelector("#passwordCancel").addEventListener("click", clearPasswordRequest);
+  }
+
+  function confirmPasswordOverlay() {
+    const input = document.querySelector("#passwordInput");
+    if (!input) return;
+    if (input.value !== resetPassword) {
+      passwordRequest.error = "Password not correct.";
+      renderPasswordOverlay();
+      return;
+    }
+
+    const action = passwordRequest.onSuccess;
+    clearPasswordRequest();
+    action();
+  }
+
+  function clearPasswordRequest() {
+    passwordRequest = null;
+    removePasswordOverlay();
+  }
+
+  function removePasswordOverlay() {
+    const overlay = document.querySelector("#passwordOverlay");
+    if (overlay) overlay.remove();
+  }
+
+  function normalizeTypedAnswer(value) {
+    return String(value || "").trim().toLowerCase();
   }
 
   function createProfileId(name) {
