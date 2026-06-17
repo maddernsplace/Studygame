@@ -13,6 +13,33 @@
   const year4ColumnMaths = window.YEAR4_COLUMN_MATHS || { questions: [] };
   const year4MathsWorkbook = window.YEAR4_MATHS_WORKBOOK || { activities: [] };
   const rewardSet = window.REWARD_SET?.items || [];
+  const englishIllustrations = {
+    teacher: {
+      src: "assets/english-illustrations/teacher-classroom.png",
+      alt: "Cartoon teacher talking to a class",
+      caption: "A classroom picture to match the page theme."
+    },
+    library: {
+      src: "assets/english-illustrations/library-reading.png",
+      alt: "Cartoon child reading in a library",
+      caption: "A reading picture to support the English work."
+    },
+    spelling: {
+      src: "assets/english-illustrations/spelling-desk.png",
+      alt: "Cartoon child doing spelling practice",
+      caption: "A spelling practice picture for the worksheet."
+    },
+    grammar: {
+      src: "assets/english-illustrations/grammar-chat.png",
+      alt: "Cartoon children talking about sentences",
+      caption: "A grammar picture to support the question."
+    },
+    wizard: {
+      src: "assets/english-illustrations/word-wizard.png",
+      alt: "Cartoon word wizard helping with spelling",
+      caption: "A playful helper for tricky word practice."
+    }
+  };
   const subjectKeys = ["maths", "english", "science", "technology"];
   const years = ["Preschool", "Reception", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6", "Year 7"];
   const encouragement = ["Brilliant!", "Nice thinking!", "You nailed it!", "Super work!", "Brain power!"];
@@ -626,6 +653,7 @@
 
   function renderEnglishGrammarQuiz() {
     const question = grammarQuizState.questions[grammarQuizState.index];
+    const illustration = pickEnglishIllustration(grammarQuizState.questions.map((item) => `${item.prompt} ${item.options.join(" ")}`).join(" "), "grammar");
     pageTitle.textContent = `Grammar Test ${grammarQuizState.test}`;
     backButton.classList.remove("hidden");
 
@@ -640,6 +668,7 @@
           <span>${getActiveProfile().name}</span>
           <span>Question ${grammarQuizState.index + 1} of ${grammarQuizState.questions.length}</span>
         </div>
+        ${renderEnglishIllustration(illustration)}
         <div class="progress-track">
           <div class="progress-fill" style="width: ${(grammarQuizState.index / grammarQuizState.questions.length) * 100}%"></div>
         </div>
@@ -733,6 +762,7 @@
 
   function renderTrickyWordsQuiz() {
     const question = trickyWordsState.questions[trickyWordsState.index];
+    const illustration = pickEnglishIllustration(trickyWordsState.questions.map((item) => `${item.prompt} ${item.options.join(" ")}`).join(" "), "tricky");
     pageTitle.textContent = `Tricky Words ${trickyWordsState.sheet}`;
     backButton.classList.remove("hidden");
 
@@ -747,6 +777,7 @@
           <span>${getActiveProfile().name}</span>
           <span>Word ${trickyWordsState.index + 1} of ${trickyWordsState.questions.length}</span>
         </div>
+        ${renderEnglishIllustration(illustration)}
         <div class="progress-track">
           <div class="progress-fill" style="width: ${(trickyWordsState.index / trickyWordsState.questions.length) * 100}%"></div>
         </div>
@@ -836,6 +867,7 @@
 
     pageTitle.textContent = `Spelling Worksheet ${worksheetNumber}`;
     backButton.classList.remove("hidden");
+    const illustration = pickEnglishIllustration(worksheet.items.map((item) => item.sentence).join(" "), "spelling");
 
     app.innerHTML = `
       <section class="panel times-practice">
@@ -843,6 +875,7 @@
           <span>${getActiveProfile().name}</span>
           <span>${englishSpellingAttemptLabel(worksheetNumber)}</span>
         </div>
+        ${renderEnglishIllustration(illustration)}
         <div class="sentence-grid">
           ${worksheet.items.map((item, index) => `
             <label class="sentence-card" data-sentence="${index}">
@@ -872,6 +905,7 @@
 
     pageTitle.textContent = `Spelling Worksheet ${worksheetNumber}`;
     backButton.classList.remove("hidden");
+    const illustration = pickEnglishIllustration(worksheet.items.map((item) => item.sentence).join(" "), "spelling");
 
     app.innerHTML = `
       <section class="panel times-practice">
@@ -879,6 +913,7 @@
           <span>${getActiveProfile().name}</span>
           <span>${year34SpellingAttemptLabel(worksheetNumber)}</span>
         </div>
+        ${renderEnglishIllustration(illustration)}
         <div class="sentence-grid">
           ${worksheet.items.map((item, index) => `
             <label class="sentence-card" data-year34-sentence="${index}">
@@ -897,6 +932,54 @@
 
     app.querySelector("#checkYear34Spelling").addEventListener("click", () => checkYear34SpellingAnswers(worksheet));
     app.querySelector("#clearYear34Spelling").addEventListener("click", () => renderYear34SpellingPractice(worksheetNumber));
+  }
+
+  function pickEnglishIllustration(sourceText, pageType) {
+    const text = String(sourceText || "").toLowerCase();
+    if (pageType === "tricky") return englishIllustrations.wizard;
+    if (text.includes("wizard") || text.includes("magic") || text.includes("ghost")) return englishIllustrations.wizard;
+
+    if (
+      text.includes("teacher") ||
+      text.includes("class") ||
+      text.includes("school") ||
+      text.includes("board")
+    ) {
+      return englishIllustrations.teacher;
+    }
+
+    if (
+      text.includes("library") ||
+      text.includes("book") ||
+      text.includes("story") ||
+      text.includes("read") ||
+      text.includes("reading")
+    ) {
+      return englishIllustrations.library;
+    }
+
+    if (
+      pageType === "grammar" ||
+      text.includes("speech") ||
+      text.includes("sentence") ||
+      text.includes("question") ||
+      text.includes("punctuation") ||
+      text.includes("conjunction") ||
+      text.includes("paragraph")
+    ) {
+      return englishIllustrations.grammar;
+    }
+
+    return englishIllustrations.spelling;
+  }
+
+  function renderEnglishIllustration(illustration) {
+    return `
+      <div class="worksheet-hero">
+        <img src="${illustration.src}" alt="${illustration.alt}">
+        <p>${illustration.caption}</p>
+      </div>
+    `;
   }
 
   function checkEnglishSpellingAnswers(worksheet) {
